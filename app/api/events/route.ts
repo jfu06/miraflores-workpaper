@@ -70,6 +70,17 @@ export async function POST(request: Request) {
       break;
     }
 
+    case "finding_dismissed": {
+      // A dismissal without a reason is a deletion wearing a different name.
+      if (!String(body.payload?.reason ?? "").trim()) {
+        return bad("Dismissing a finding requires a reason");
+      }
+      break;
+    }
+
+    case "required_step":
+      break;
+
     case "review_note_resolved": {
       const target = getById(String(body.payload?.targetEventId ?? ""));
       if (!target || target.type !== "review_note") return bad("No such review note");

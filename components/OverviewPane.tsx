@@ -6,6 +6,7 @@ import type { AreaSummaryRow, Comparison } from "@/lib/view/overview";
 import type { VarianceReport, VarianceRow } from "@/lib/view/variance";
 import { appendEvent } from "@/lib/view/client";
 import { formatMoney, formatValue } from "@/lib/view/format";
+import { OpenItems, type ChecksData } from "./OpenItems";
 import { Chip, Empty, PaneHeader, Section } from "./ui";
 
 export interface Overview {
@@ -15,7 +16,7 @@ export interface Overview {
   explanations: { key: string; text: string; actorName: string; at: string }[];
 }
 
-type Tab = "summary" | "areas" | "variances";
+type Tab = "summary" | "areas" | "variances" | "open";
 
 /**
  * What a reviewer sees on opening the file.
@@ -26,11 +27,15 @@ type Tab = "summary" | "areas" | "variances";
  */
 export function OverviewPane({
   data,
+  checks,
   onSelect,
+  onOpenRef,
   onChanged,
 }: {
   data: Overview | null;
+  checks: ChecksData | null;
   onSelect: (key: string) => void;
+  onOpenRef: (ref: string) => void;
   onChanged: () => void;
 }) {
   const [tab, setTab] = useState<Tab>("summary");
@@ -45,6 +50,8 @@ export function OverviewPane({
   }
 
   const { variance } = data;
+  const dismissed = new Set((checks?.dismissals ?? []).map((d) => d.findingId));
+  const openCount = (checks?.findings ?? []).filter((f) => !dismissed.has(f.id)).length;
   const unexplained = variance.rows.filter(
     (r) => r.flagged && !data.explanations.some((e) => e.key === r.key),
   ).length;
@@ -56,7 +63,7 @@ export function OverviewPane({
         title="This return, against last year"
         right={
           <div className="flex rounded border border-edge p-0.5">
-            {(["summary", "areas", "variances"] as Tab[]).map((t) => (
+            {(["summary", "areas", "variances", "open"] as Tab[]).map((t) => (
               <button
                 key={t}
                 onClick={() => setTab(t)}
@@ -64,7 +71,11 @@ export function OverviewPane({
                   tab === t ? "bg-accent text-white" : "text-muted hover:text-foreground"
                 }`}
               >
-                {t === "variances" ? `Variances ${variance.flaggedCount}` : t}
+                {t === "variances"
+                  ? `Variances ${variance.flaggedCount}`
+                  : t === "open"
+                    ? `Open items ${openCount}`
+                    : t}
               </button>
             ))}
           </div>
@@ -204,6 +215,15 @@ export function OverviewPane({
               engagement budget.
             </p>
           </Section>
+        )}
+
+        {tab === "open" && (
+          <OpenItems
+            data={checks}
+            onSelect={onSelect}
+            onOpenRef={onOpenRef}
+            onChanged={onChanged}
+          />
         )}
 
         {tab === "variances" && (

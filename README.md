@@ -128,6 +128,31 @@ does. Revealing one is a separate request that checks clearance and appends a
 `sensitive_view` event before returning the value, so the log records actual
 disclosures rather than page loads.
 
+### Checks that do not trust the engine
+
+Fifteen checks run against the packet. Each declares what it recomputes or
+cross-reads for itself, and the app shows that sentence next to every finding, so
+"we checked this" is a claim a reviewer can inspect rather than take on faith.
+
+```bash
+npm run checks     # 15 checks, 101 findings — 15 high, 52 medium, 34 low
+```
+
+They never read the event log. A finding cannot be made to disappear by doing
+work around it: it is dismissed explicitly, with a reason and an author, and the
+check still runs and still reports. Finding ids are stable across runs so a
+dismissal recorded today still applies after the next run.
+
+The engine's own diagnostics are treated as an input, not a verdict — one check
+re-tests the condition each of them asserts. It currently reports nothing, which
+is the right answer: v3 dropped the two diagnostics v1 and v2 carried, once the
+late K-1s arrived.
+
+Two findings converge from opposite directions and are worth the example. The
+tie-out check adds the Meridian lots itself and reports the summary 250 adrift;
+the unread-page check reads page 32 and finds a single lot with proceeds of
+250.00. They share no code. See [FINDINGS.md](FINDINGS.md).
+
 ## Simulated source documents
 
 `lib/graph/document.ts` is the seam where real documents would replace simulated
@@ -173,13 +198,16 @@ Switch to Marcus Bell, who has no clearance, and the SSNs mask in the page itsel
 With no line selected, the middle pane is the overview a reviewer opens the file
 for: this return against last year for both jurisdictions, with a caveat marked
 where the two years are not measured on the same basis; the state of each review
-area against the firm's budget; and every flagged variance, with the not-comparable
-and unmatched ones called out ahead of the swings.
+area against the firm's budget; every flagged variance, with the not-comparable
+and unmatched ones called out ahead of the swings; and open items — the check
+findings, the firm's twelve required steps, and the engine's diagnostics in one
+list. Five of the twelve steps are derived from the checks rather than ticked by
+hand, so a step cannot be marked done while the thing it asserts is untrue.
 
 ## Not built yet
 
-Adjustments and tax effect, the check suite, bulk actions, timeline replay, filing,
-amendment and the client-facing views. See the plan.
+Adjustments and tax effect, bulk actions, timeline replay, filing, amendment and
+the client-facing views. See the plan.
 
 ## Findings
 

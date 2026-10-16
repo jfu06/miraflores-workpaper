@@ -17,6 +17,8 @@ interface Props {
   summaries: Record<string, ScopeSummary>;
   /** Lines with a flagged prior-year variance. */
   flaggedKeys: Set<string>;
+  /** Lines carrying a high-severity check finding. */
+  findingKeys: Set<string>;
 }
 
 /**
@@ -26,7 +28,14 @@ interface Props {
  * reviewer works in: the firm budgets hours by area, and a form belongs to one.
  * Lines keep the engine's own order inside a form.
  */
-export function ReturnOutline({ outline, selectedKey, onSelect, summaries, flaggedKeys }: Props) {
+export function ReturnOutline({
+  outline,
+  selectedKey,
+  onSelect,
+  summaries,
+  flaggedKeys,
+  findingKeys,
+}: Props) {
   const [jurisdiction, setJurisdiction] = useState<Jurisdiction>("federal");
   const [query, setQuery] = useState("");
 
@@ -125,6 +134,14 @@ export function ReturnOutline({ outline, selectedKey, onSelect, summaries, flagg
                           <span className="min-w-0 flex-1 truncate text-[12px]" title={line.label}>
                             {line.label}
                           </span>
+                          {findingKeys.has(line.key) && (
+                            <span
+                              className="shrink-0 text-[10px] font-bold text-bad"
+                              title="A check found something on this line"
+                            >
+                              &#9679;
+                            </span>
+                          )}
                           {flaggedKeys.has(line.key) && (
                             <span
                               className="shrink-0 text-[10px] text-warn"

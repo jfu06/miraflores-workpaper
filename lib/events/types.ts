@@ -27,6 +27,8 @@ export const REVIEW_LEVELS = ["preparer", "reviewer", "partner"] as const;
 export type ReviewLevel = (typeof REVIEW_LEVELS)[number];
 
 export type EventType =
+  | "finding_dismissed"
+  | "required_step"
   | "verification"
   | "note"
   | "review_note"
@@ -36,7 +38,15 @@ export type EventType =
   | "sensitive_view"
   | "variance_explained";
 
-export type ScopeKind = "line" | "document" | "extracted_value" | "return";
+export type ScopeKind =
+  | "line"
+  | "document"
+  | "extracted_value"
+  | "return"
+  /** A check finding, addressed by its stable id, so a dismissal survives a rerun. */
+  | "finding"
+  /** One of the firm's required steps, addressed by its text. */
+  | "step";
 
 export interface Scope {
   kind: ScopeKind;
@@ -95,6 +105,22 @@ export interface VarianceExplainedPayload {
   text: string;
 }
 
+/**
+ * Dismissing a finding does not delete it.
+ *
+ * The check still runs and still reports; the dismissal records that someone
+ * looked and decided, with a reason. A finding nobody can argue with is a finding
+ * nobody read.
+ */
+export interface FindingDismissedPayload {
+  reason: string;
+}
+
+export interface RequiredStepPayload {
+  step: string;
+  note?: string;
+}
+
 export interface SensitiveViewPayload {
   /** The reference whose masked value was revealed. */
   ref: string;
@@ -109,7 +135,9 @@ export type EventPayload =
   | SignoffPayload
   | RevertPayload
   | SensitiveViewPayload
-  | VarianceExplainedPayload;
+  | VarianceExplainedPayload
+  | FindingDismissedPayload
+  | RequiredStepPayload;
 
 export interface WorkpaperEvent<P = EventPayload> {
   /** Monotonic insertion order; the authoritative sequence. */

@@ -78,6 +78,37 @@ function overlaps(span: Span, taken: Span[]): boolean {
   return taken.some((t) => span.start < t.end && t.start < span.end);
 }
 
+/** A needle that is entirely digits and number punctuation. */
+const NUMERIC_NEEDLE = /^[\d,.()-]+$/;
+const NUMBER_CHAR = /[\d.,]/;
+
+/**
+ * Whether a match sits at a number boundary rather than inside a longer number.
+ *
+ * Without this, a lot whose wash sale amount reads "0.00" matches the tail of a
+ * neighbouring "18,480.00", claims that span, and the proceeds value that really
+ * is printed there is then reported as missing from its own page. Short numeric
+ * readings are common on these documents, so the guard is load-bearing.
+ */
+function atNumberBoundary(printed: string, needle: string, at: number): boolean {
+  if (!NUMERIC_NEEDLE.test(needle)) return true;
+  const before = at > 0 ? printed[at - 1] : "";
+  const after = printed[at + needle.length] ?? "";
+  return !NUMBER_CHAR.test(before) && !NUMBER_CHAR.test(after);
+}
+
+/** First occurrence of `needle` that is unclaimed and not inside a longer number. */
+function findUnclaimed(printed: string, needle: string, taken: Span[]): Span | null {
+  let from = 0;
+  let found = -1;
+  while ((found = printed.indexOf(needle, from)) !== -1) {
+    const span = { start: found, end: found + needle.length };
+    if (!overlaps(span, taken) && atNumberBoundary(printed, needle, found)) return span;
+    from = found + 1;
+  }
+  return null;
+}
+
 /**
  * Locate each extracted value on one page's printed content.
  *
@@ -106,17 +137,11 @@ export function locatePage(printed: string, values: ExtractedValue[]): Located[]
     // 1. The pipeline's own reading, verbatim.
     const verbatim = ev.text_as_read?.trim();
     if (verbatim) {
-      let from = 0;
-      let found = -1;
-      while ((found = printed.indexOf(verbatim, from)) !== -1) {
-        const span = { start: found, end: found + verbatim.length };
-        if (!overlaps(span, taken)) {
-          results.push(claim(span, "text_as_read"));
-          break;
-        }
-        from = found + 1;
+      const span = findUnclaimed(printed, verbatim, taken);
+      if (span) {
+        results.push(claim(span, "text_as_read"));
+        continue;
       }
-      if (results.at(-1)?.evId === ev.id) continue;
     }
 
     // 2. The pipeline's normalized value, verbatim. Dates are the reason this
@@ -126,17 +151,11 @@ export function locatePage(printed: string, values: ExtractedValue[]): Located[]
     //    the document (506 of its 1,826 values).
     const normalized = typeof ev.value === "string" ? ev.value.trim() : "";
     if (normalized && normalized !== verbatim && normalized.length > 2) {
-      let from = 0;
-      let found = -1;
-      while ((found = printed.indexOf(normalized, from)) !== -1) {
-        const span = { start: found, end: found + normalized.length };
-        if (!overlaps(span, taken)) {
-          results.push(claim(span, "normalized_value"));
-          break;
-        }
-        from = found + 1;
+      const span = findUnclaimed(printed, normalized, taken);
+      if (span) {
+        results.push(claim(span, "normalized_value"));
+        continue;
       }
-      if (results.at(-1)?.evId === ev.id) continue;
     }
 
     // 3. The value, compared numerically, so "4,800.00" matches "$4,800".

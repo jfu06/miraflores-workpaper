@@ -9,6 +9,7 @@ import { formatMoney } from "@/lib/view/format";
 import { EvidencePane, type DocRequest } from "./EvidencePane";
 import { NumberPanel } from "./NumberPanel";
 import { OverviewPane, type Overview } from "./OverviewPane";
+import type { ChecksData } from "./OpenItems";
 import { ReturnOutline } from "./ReturnOutline";
 import { RoleSwitcher } from "./RoleSwitcher";
 import { Chip } from "./ui";
@@ -39,6 +40,7 @@ export function Workpaper({ meta, outline }: Props) {
   const [record, setRecord] = useState<ResolvedRef | null>(null);
   const [summaries, setSummaries] = useState<Record<string, ScopeSummary>>({});
   const [overview, setOverview] = useState<Overview | null>(null);
+  const [checks, setChecks] = useState<ChecksData | null>(null);
 
   /**
    * Bumped whenever the acting role changes, to force the detail panes to refetch.
@@ -56,6 +58,10 @@ export function Workpaper({ meta, outline }: Props) {
       .then((r) => r.json())
       .then((d: Overview) => setOverview(d))
       .catch(() => undefined);
+    fetch("/api/checks")
+      .then((r) => r.json())
+      .then((d: ChecksData) => setChecks(d))
+      .catch(() => undefined);
   }, []);
 
   const refreshWork = useCallback(() => {
@@ -70,6 +76,22 @@ export function Workpaper({ meta, outline }: Props) {
     () => new Set((overview?.variance.rows ?? []).filter((r) => r.flagged).map((r) => r.key)),
     [overview],
   );
+
+  /** Lines carrying an undismissed high-severity finding. */
+  const findingKeys = useMemo(() => {
+    const dismissed = new Set((checks?.dismissals ?? []).map((d) => d.findingId));
+    return new Set(
+      (checks?.findings ?? [])
+        .filter(
+          (f) =>
+            f.severity === "high" &&
+            !dismissed.has(f.id) &&
+            f.scope?.kind === "line" &&
+            f.checkId !== "RECON-VARIANCE",
+        )
+        .map((f) => f.scope!.id),
+    );
+  }, [checks]);
 
   /**
    * One entry point for every reference click in the app.
@@ -146,11 +168,18 @@ export function Workpaper({ meta, outline }: Props) {
             onSelect={selectLine}
             summaries={summaries}
             flaggedKeys={flaggedKeys}
+            findingKeys={findingKeys}
           />
         </div>
         <div className="min-h-0 bg-surface">
           {selectedKey === null ? (
-            <OverviewPane data={overview} onSelect={selectLine} onChanged={refreshWork} />
+            <OverviewPane
+              data={overview}
+              checks={checks}
+              onSelect={selectLine}
+              onOpenRef={openSource}
+              onChanged={refreshWork}
+            />
           ) : (
             <NumberPanel
               key={`line-${revision}`}
