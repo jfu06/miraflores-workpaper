@@ -6,6 +6,7 @@
 
 import { parseRef } from "../graph/refs";
 import { resolveRef } from "../graph/graph";
+import { buildFormIndex } from "../adjust/recompute";
 import type { Check, Finding } from "./types";
 
 function money(value: number): string {
@@ -305,6 +306,42 @@ export const basisGap: Check = {
         title: `${name.replace(/_/g, " ")}: the basis roll-forward has a hole`,
         detail: `${parts.join("; ")}. Everything computed from this basis carries whatever the engine assumed to get past the gap.`,
         refs: [`py:/basis_records/${name}`],
+      });
+    }
+
+    return findings;
+  },
+};
+
+export const incompleteInputs: Check = {
+  id: "INT-INPUTS-INCOMPLETE",
+  title: "A line's declared inputs cannot produce its value",
+  family: "integrity",
+  rationale:
+    "'Show how any number was built' is only true if the inputs a line declares actually build it. Where they do not, the derivation shown to a reviewer is incomplete, and a change to the line cannot be carried forward.",
+  independent:
+    "Solves each combination line's arithmetic against the engine's own published values and reports the ones no combination of its declared inputs can reproduce. Nothing is assumed about the arithmetic — it is recovered and verified.",
+  run({ graph }) {
+    const forms = buildFormIndex(graph);
+    const findings: Finding[] = [];
+
+    for (const [key, info] of forms.unsolved) {
+      const line = graph.lineByKey.get(key);
+      if (!line) continue;
+
+      findings.push({
+        id: `INT-INPUTS-INCOMPLETE:${key}`,
+        checkId: "INT-INPUTS-INCOMPLETE",
+        severity: "medium",
+        title: `${line.form} ${line.line} declares inputs that fall short by ${
+          info.shortfall === undefined ? "an unknown amount" : info.shortfall.toLocaleString("en-US")
+        }`,
+        detail: `${line.label} = ${
+          typeof line.value === "number" ? line.value.toLocaleString("en-US") : line.value
+        }, under rule ${line.rule}, from ${line.inputs.join(", ") || "no inputs"}. ${info.reason}`,
+        refs: [key, ...line.inputs],
+        scope: { kind: "line", id: key },
+        amount: info.shortfall === undefined ? undefined : Math.abs(info.shortfall),
       });
     }
 

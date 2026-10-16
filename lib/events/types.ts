@@ -27,6 +27,8 @@ export const REVIEW_LEVELS = ["preparer", "reviewer", "partner"] as const;
 export type ReviewLevel = (typeof REVIEW_LEVELS)[number];
 
 export type EventType =
+  | "adjustment"
+  | "adjustment_approved"
   | "finding_dismissed"
   | "required_step"
   | "verification"
@@ -106,6 +108,35 @@ export interface VarianceExplainedPayload {
 }
 
 /**
+ * A change to a figure, with the original kept beside it.
+ *
+ * The effect is computed on the server and stored, not supplied by the caller:
+ * the firm's threshold for partner sign-off is stated in money, so the figure
+ * that decides whether a partner is required cannot be the client's to assert.
+ */
+export interface AdjustmentPayload {
+  from: number;
+  to: number;
+  reason: string;
+  category: string;
+  effect: {
+    federal: number;
+    california: number;
+    basis: "rate" | "direct";
+    federalRate?: number;
+    californiaRate?: number;
+    caveats: string[];
+  };
+  /** True when the firm's 1,000 threshold is crossed in either jurisdiction. */
+  requiresPartner: boolean;
+}
+
+export interface AdjustmentApprovedPayload {
+  targetEventId: string;
+  note?: string;
+}
+
+/**
  * Dismissing a finding does not delete it.
  *
  * The check still runs and still reports; the dismissal records that someone
@@ -137,7 +168,9 @@ export type EventPayload =
   | SensitiveViewPayload
   | VarianceExplainedPayload
   | FindingDismissedPayload
-  | RequiredStepPayload;
+  | RequiredStepPayload
+  | AdjustmentPayload
+  | AdjustmentApprovedPayload;
 
 export interface WorkpaperEvent<P = EventPayload> {
   /** Monotonic insertion order; the authoritative sequence. */

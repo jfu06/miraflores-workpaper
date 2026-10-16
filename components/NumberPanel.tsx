@@ -8,6 +8,8 @@ import { areaLabel } from "@/lib/view/areas";
 import { formatValue } from "@/lib/view/format";
 import { REF_KIND_LABEL } from "@/lib/graph/refs";
 import { TraceNode } from "./TraceTree";
+import { AdjustPanel } from "./AdjustPanel";
+import { PROVENANCE_NOTE, PROVENANCE_TONE, type AdjustedData } from "./Adjustments";
 import { WorkPanel } from "./WorkPanel";
 import { Chip, Empty, PaneHeader, Section } from "./ui";
 
@@ -17,6 +19,7 @@ interface Props {
   onOpenSource: (ref: string) => void;
   onWorkChanged: () => void;
   onBack: () => void;
+  adjusted: AdjustedData | null;
 }
 
 /**
@@ -26,7 +29,14 @@ interface Props {
  * it, what rule produced it, what was it built from, what evidence sits under it,
  * what does it feed, and has the engine said anything about it.
  */
-export function NumberPanel({ lineKey, onSelect, onOpenSource, onWorkChanged, onBack }: Props) {
+export function NumberPanel({
+  lineKey,
+  onSelect,
+  onOpenSource,
+  onWorkChanged,
+  onBack,
+  adjusted,
+}: Props) {
   const [detail, setDetail] = useState<LineDetail | null>(null);
   const [error, setError] = useState<string | null>(null);
 
@@ -73,6 +83,14 @@ export function NumberPanel({ lineKey, onSelect, onOpenSource, onWorkChanged, on
   }
 
   const unresolved = detail.sources.filter((s) => !s.ok);
+  const moved = adjusted?.lines.find((l) => l.key === detail.key);
+  const provenance = moved?.provenance ?? "engine";
+  const adjustedByKey = new Map(
+    (adjusted?.lines ?? []).map((l) => [
+      l.key,
+      { value: l.value, original: l.original, provenance: l.provenance },
+    ]),
+  );
 
   return (
     <div className="flex h-full flex-col">
@@ -96,7 +114,21 @@ export function NumberPanel({ lineKey, onSelect, onOpenSource, onWorkChanged, on
             {detail.label}
           </span>
         }
-        right={<span className="tnum text-[15px] font-semibold">{formatValue(detail.value)}</span>}
+        right={
+          <span className="flex items-baseline gap-1.5">
+            {moved && (
+              <span className="tnum text-[12px] text-muted line-through">
+                {formatValue(moved.original)}
+              </span>
+            )}
+            <span className="tnum text-[15px] font-semibold">
+              {formatValue(moved ? moved.value : detail.value)}
+            </span>
+            <Chip tone={PROVENANCE_TONE[provenance]} title={PROVENANCE_NOTE[provenance]}>
+              {provenance}
+            </Chip>
+          </span>
+        }
       />
 
       <div className="min-h-0 flex-1 overflow-y-auto">
@@ -148,6 +180,7 @@ export function NumberPanel({ lineKey, onSelect, onOpenSource, onWorkChanged, on
               depth={0}
               onSelect={onSelect}
               onOpenSource={onOpenSource}
+              adjusted={adjustedByKey}
             />
           ) : (
             <p className="text-[12px] text-muted">
@@ -210,6 +243,22 @@ export function NumberPanel({ lineKey, onSelect, onOpenSource, onWorkChanged, on
                 </li>
               ))}
             </ul>
+          </Section>
+        )}
+
+        {typeof detail.value === "number" && (
+          <AdjustPanel
+            key={detail.key}
+            lineKey={detail.key}
+            currentValue={moved ? moved.value : detail.value}
+            defaultCategory={detail.defaultCategory}
+            onChanged={onWorkChanged}
+          />
+        )}
+
+        {moved?.limitation && (
+          <Section title="Why this is an estimate">
+            <p className="text-[11px] text-muted">{moved.limitation}</p>
           </Section>
         )}
 

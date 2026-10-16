@@ -81,6 +81,16 @@ interface Props {
 
 export function OpenItems({ data, onSelect, onOpenRef, onChanged }: Props) {
   const [showDismissed, setShowDismissed] = useState(false);
+  const [selected, setSelected] = useState<Set<string>>(new Set());
+  const [busy, setBusy] = useState(false);
+
+  const toggle = (id: string) =>
+    setSelected((current) => {
+      const next = new Set(current);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
 
   const dismissedIds = useMemo(
     () => new Set((data?.dismissals ?? []).map((d) => d.findingId)),
@@ -102,6 +112,7 @@ export function OpenItems({ data, onSelect, onOpenRef, onChanged }: Props) {
     else byFamily.set(family, [finding]);
   }
 
+  const applicable = live.filter((f) => f.suggestedAdjustment);
   const high = live.filter((f) => f.severity === "high").length;
   const medium = live.filter((f) => f.severity === "medium").length;
 
@@ -133,6 +144,41 @@ export function OpenItems({ data, onSelect, onOpenRef, onChanged }: Props) {
           )}
         </span>
       </div>
+
+      {applicable.length > 0 && (
+        <div className="flex flex-wrap items-center gap-2 border-b border-edge bg-accent-soft px-4 py-2">
+          <span className="text-[11px]">
+            {applicable.length} finding{applicable.length === 1 ? "" : "s"} carry a figure that can
+            be applied directly, because the right answer is a fact in another record.
+          </span>
+          <button
+            disabled={busy || selected.size === 0}
+            onClick={async () => {
+              setBusy(true);
+              try {
+                await fetch("/api/bulk", {
+                  method: "POST",
+                  headers: { "Content-Type": "application/json" },
+                  body: JSON.stringify({ action: "apply_findings", findingIds: [...selected] }),
+                });
+                setSelected(new Set());
+                onChanged();
+              } finally {
+                setBusy(false);
+              }
+            }}
+            className="ml-auto shrink-0 rounded bg-accent px-2 py-0.5 text-[11px] font-medium text-white transition hover:brightness-110 disabled:opacity-40"
+          >
+            Apply {selected.size || ""} as one action
+          </button>
+          <button
+            onClick={() => setSelected(new Set(applicable.map((f) => f.id)))}
+            className="shrink-0 text-[10px] text-muted hover:text-foreground"
+          >
+            select all
+          </button>
+        </div>
+      )}
 
       <Section title={`Required steps · ${data.requiredSteps.length}`}>
         <ul className="space-y-0.5">
@@ -189,6 +235,8 @@ export function OpenItems({ data, onSelect, onOpenRef, onChanged }: Props) {
                 onSelect={onSelect}
                 onOpenRef={onOpenRef}
                 onChanged={onChanged}
+                selected={selected.has(finding.id)}
+                onToggle={() => toggle(finding.id)}
               />
             ))}
           </ul>
@@ -241,12 +289,16 @@ function FindingCard({
   onSelect,
   onOpenRef,
   onChanged,
+  selected,
+  onToggle,
 }: {
   finding: Finding;
   check?: Omit<Check, "run">;
   onSelect: (k: string) => void;
   onOpenRef: (ref: string) => void;
   onChanged: () => void;
+  selected: boolean;
+  onToggle: () => void;
 }) {
   const [open, setOpen] = useState(false);
   const [reason, setReason] = useState("");
@@ -259,6 +311,17 @@ function FindingCard({
       }`}
     >
       <div className="flex items-baseline gap-1.5">
+        {finding.suggestedAdjustment && (
+          <input
+            type="checkbox"
+            checked={selected}
+            onChange={onToggle}
+            title={`Apply ${finding.suggestedAdjustment.lineKey}: ${formatMoney(
+              finding.suggestedAdjustment.from,
+            )} to ${formatMoney(finding.suggestedAdjustment.to)}`}
+            className="mt-0.5 shrink-0 accent-[#1f5c8b]"
+          />
+        )}
         <Chip tone={SEVERITY_TONE[finding.severity]}>{finding.severity}</Chip>
         <button
           onClick={() => finding.scope?.kind === "line" && onSelect(finding.scope.id)}
@@ -272,6 +335,17 @@ function FindingCard({
       </div>
 
       <p className="mt-0.5 text-[11px] leading-relaxed">{finding.detail}</p>
+
+      {finding.suggestedAdjustment && (
+        <p className="mt-1 text-[11px]">
+          <Chip tone="accent">applicable</Chip>{" "}
+          <span className="tnum">
+            {finding.suggestedAdjustment.lineKey} {formatMoney(finding.suggestedAdjustment.from)}{" "}
+            &rarr; {formatMoney(finding.suggestedAdjustment.to)}
+          </span>{" "}
+          <span className="text-muted">{finding.suggestedAdjustment.reason}</span>
+        </p>
+      )}
 
       <div className="mt-1 flex flex-wrap items-center gap-1">
         {finding.refs.slice(0, 7).map((ref) => (

@@ -12,6 +12,13 @@ interface Props {
   depth: number;
   onSelect: (key: string) => void;
   onOpenSource: (ref: string) => void;
+  /**
+   * Lines the adjustment ledger has moved. The trace must show the same figure
+   * the header does: a derivation that still reads the engine's number while the
+   * total above it reads the adjusted one is exactly the inconsistency this
+   * workpaper exists to remove.
+   */
+  adjusted?: Map<string, { value: number; original: number; provenance: string }>;
 }
 
 /**
@@ -23,12 +30,13 @@ interface Props {
  * the whole trace, from a figure on Form 1040 to a box on a W-2, without leaving
  * the panel.
  */
-export function TraceNode({ node, depth, onSelect, onOpenSource }: Props) {
+export function TraceNode({ node, depth, onSelect, onOpenSource, adjusted }: Props) {
   const [open, setOpen] = useState(depth === 0);
   const [detail, setDetail] = useState<LineDetail | null>(null);
   const [error, setError] = useState<string | null>(null);
 
   const expandable = node.inputCount > 0 || node.sourceCount > 0;
+  const moved = adjusted?.get(node.key);
 
   useEffect(() => {
     if (!open || detail || !expandable) return;
@@ -65,7 +73,17 @@ export function TraceNode({ node, depth, onSelect, onOpenSource }: Props) {
           <span className="min-w-0 flex-1 truncate text-[12px] hover:text-accent" title={node.label}>
             {node.label}
           </span>
-          <span className="tnum shrink-0 text-[12px] font-medium">{formatValue(node.value)}</span>
+          {moved && (
+            <span className="tnum shrink-0 text-[10px] text-muted line-through">
+              {formatValue(moved.original)}
+            </span>
+          )}
+          <span
+            className={`tnum shrink-0 text-[12px] font-medium ${moved ? "text-accent" : ""}`}
+            title={moved ? moved.provenance : undefined}
+          >
+            {formatValue(moved ? moved.value : node.value)}
+          </span>
         </button>
       </div>
 
@@ -80,6 +98,7 @@ export function TraceNode({ node, depth, onSelect, onOpenSource }: Props) {
               depth={depth + 1}
               onSelect={onSelect}
               onOpenSource={onOpenSource}
+              adjusted={adjusted}
             />
           ))}
 

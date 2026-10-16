@@ -153,6 +153,44 @@ tie-out check adds the Meridian lots itself and reports the summary 250 adrift;
 the unread-page check reads page 32 and finds a single lot with proceeds of
 250.00. They share no code. See [FINDINGS.md](FINDINGS.md).
 
+### Adjusting, and the four kinds of number
+
+The engine cannot be rerun, and the packet offers per-dollar rates instead. That
+makes the central design question honest bookkeeping: every number in an adjusted
+return is one of four things, and the workpaper says which beside the figure.
+
+| | |
+|---|---|
+| **engine** | the figure the engine published, untouched |
+| **manual** | set by a person, with a reason, over the engine's figure |
+| **recomputed** | derived from the adjusted inputs by arithmetic recovered from the engine's own numbers and verified against them — exact |
+| **estimated** | not derivable here; approximated from the packet's per-dollar rates, measured at this version's numbers |
+
+The recomputation is not assumed. For each line that is pure arithmetic over other
+lines, the combination that reproduces the engine's published value is **solved
+for and verified against it**: 128 lines, all 128 reproducing exactly, 19 of them
+by subtraction rather than addition — `R-SUM` is documented as "arithmetic
+combination", not a sum, so assuming would have been wrong both ways.
+
+Five lines resist, and they are reported rather than guessed at (see F-007).
+Propagation **stops** at them: beyond a line whose arithmetic cannot be recovered
+the figures are unknown, not approximately known, and nothing downstream is
+restated.
+
+Where a change does reach a balance, the recomputed figure is the answer and the
+rate estimate is superseded — kept only as the measure the firm's partner
+threshold was applied to. The two are never shown as though they were two
+readings of the same thing.
+
+The firm's rule that an adjustment over 1,000 of effect needs partner sign-off is
+enforced by holding such an adjustment as **proposed**: it shows its effect but
+does not move the return until a partner who did not propose it approves.
+
+Findings whose right answer is a fact in another record carry the figure, so they
+can be applied rather than retyped — and applied together, under one group id,
+undone by one action that appends compensating events rather than deleting
+anything.
+
 ## Simulated source documents
 
 `lib/graph/document.ts` is the seam where real documents would replace simulated
@@ -206,8 +244,8 @@ hand, so a step cannot be marked done while the thing it asserts is untrue.
 
 ## Not built yet
 
-Adjustments and tax effect, bulk actions, timeline replay, filing, amendment and
-the client-facing views. See the plan.
+Timeline replay, filing and the freeze, amendment, the notice record, and the
+client-facing views. See the plan.
 
 ## Findings
 

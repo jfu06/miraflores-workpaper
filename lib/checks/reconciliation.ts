@@ -117,6 +117,12 @@ export const agencyReconciliation: Check = {
         refs: [check.lineKey, check.agencyRef, ...line.sources.slice(0, 8)],
         scope: { kind: "line", id: check.lineKey },
         amount: Math.abs(difference),
+        suggestedAdjustment: {
+          lineKey: check.lineKey,
+          from: line.value,
+          to: check.posted,
+          reason: `Agreed to ${check.agency} as of ${check.asOf}.`,
+        },
       });
     }
 

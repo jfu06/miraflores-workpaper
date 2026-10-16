@@ -6,7 +6,8 @@
     "dev": "next dev --turbopack",
     "build": "next build --turbopack",
     "start": "next start",
-    "checks": "tsc lib/graph/refs.ts lib/graph/graph.ts lib/graph/document.ts lib/view/variance.ts lib/view/areas.ts lib/checks/run.ts scripts/check-suite.ts --outDir .tscheck --module commonjs --target es2022 --moduleResolution node --skipLibCheck --esModuleInterop && node .tscheck/scripts/check-suite.js"
+    "checks": "tsc --outDir .tscheck --module commonjs --target es2022 --moduleResolution node --strict --skipLibCheck --esModuleInterop lib/graph/refs.ts lib/graph/graph.ts lib/graph/document.ts lib/view/variance.ts lib/view/areas.ts lib/checks/run.ts scripts/check-suite.ts && node .tscheck/scripts/check-suite.js",
+    "verify": "tsc --outDir .tscheck --module commonjs --target es2022 --moduleResolution node --strict --skipLibCheck --esModuleInterop lib/graph/refs.ts lib/graph/graph.ts lib/graph/document.ts lib/view/variance.ts lib/view/areas.ts lib/checks/run.ts scripts/check-refs.ts scripts/check-integrity.ts scripts/check-locate.ts scripts/check-recompute.ts scripts/check-suite.ts && for s in check-refs check-integrity check-locate check-recompute check-suite; do echo \"\\n=== $s ===\"; node .tscheck/scripts/$s.js; done"
   },
   "dependencies": {
     "next": "15.5.28",

@@ -11,7 +11,7 @@ input, not a verdict: one check re-tests the condition each one asserts, and the
 findings marked **[not in diagnostics]** are ones the engine does not report.
 
 ```
-15 checks, 101 findings — 15 high, 52 medium, 34 low
+16 checks, 106 findings — 15 high, 57 medium, 34 low
 
 EV-NOT-ON-PAGE             1   Extracted amount does not appear on its own page
 EV-LOW-CONFIDENCE          2   Low-confidence reading used on the return
@@ -28,6 +28,7 @@ INT-REF                    1   A source reference does not resolve on its own te
 INT-STATE-SOURCE           2   All of an item sourced to CA despite part-year residency
 INT-STALE-DIAGNOSTIC       0   An engine diagnostic is no longer true
 INT-BASIS-GAP              2   A basis record has a missing year
+INT-INPUTS-INCOMPLETE      5   A line's declared inputs cannot produce its value
 ```
 
 Two checks reporting nothing is also a result. `DOC-SUPERSEDED-USED` is clean
@@ -302,3 +303,42 @@ differ. The document-grouping key now includes the tax year.
 
 Both were caught by reading what the check reported against the underlying page,
 which is the same thing the workpaper asks a reviewer to do.
+
+## F-007 — Five Schedule CA lines declare inputs that cannot produce their value **[not in diagnostics]**
+
+**Check:** `INT-INPUTS-INCOMPLETE`. Solves each combination line's arithmetic
+against the engine's own published values and reports the ones no combination of
+their declared inputs can reproduce.
+
+| line | value | declared inputs | short by |
+|---|---|---|---|
+| `SchCA540NR.1.D` | 218,400 | `1.A` | 6,000 |
+| `SchCA540NR.2.D` | 6,040 | `2.A` | −410 |
+| `SchCA540NR.12.A` | 81,854 | `F1040.8`, `SchC.31` | −70,024 |
+| `SchCA540NR.12.D` | 112,254 | `12.A` | 30,400 |
+| `SchCA540NR.17.D` | −12,314 | `17.A` | −484 |
+
+Each shortfall is exactly another column on the same line that the engine did not
+declare: 1.D is short by `1.C`, the California additions (6,000); 12.D by `12.C`
+(30,400); 17.D by `17.B` (484). `SchCA540NR.12.A` carries `SchC.31` and also
+names `F1040.8`, which it does not use.
+
+**Why it matters:** "show how any number was built" is only true if the inputs a
+line declares actually build it. The trace shown for these five is incomplete —
+a reviewer expanding `SchCA540NR.1.D` sees 212,400 under a figure of 218,400 and
+nothing to explain the difference. It also bounds what can be recomputed: a
+change to the California additions column cannot be carried into the total,
+because the total does not declare it as an input.
+
+**How it was found:** not by reading the data, but by building the recompute
+engine. The arithmetic for every combination line is solved against the engine's
+published figures rather than assumed — `R-SUM` is documented as "arithmetic
+combination", and 19 of the 128 solved lines turn out to subtract, so assuming a
+sum would have been wrong in both directions. These five are the residue: lines
+where no combination of the declared inputs reproduces the published value.
+
+**Disposition:** the five are excluded from recomputation and reported. An
+adjustment upstream of them stops there, and the workpaper says so rather than
+carrying a figure it cannot stand behind.
+
+---

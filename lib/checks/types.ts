@@ -52,6 +52,12 @@ export interface Finding {
    * tax judgment. Left unset when the amount would be an opinion.
    */
   amount?: number;
+  /**
+   * A correction the check can state exactly, so the finding can be applied
+   * rather than retyped. Only set where the right figure is a fact in another
+   * record — not where it would be a judgment.
+   */
+  suggestedAdjustment?: { lineKey: string; from: number; to: number; reason: string };
 }
 
 export interface CheckContext {

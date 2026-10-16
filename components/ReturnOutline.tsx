@@ -19,6 +19,8 @@ interface Props {
   flaggedKeys: Set<string>;
   /** Lines carrying a high-severity check finding. */
   findingKeys: Set<string>;
+  /** Lines the adjustment ledger has moved, with how the new figure was arrived at. */
+  adjustedLines: { key: string; value: number; original: number; provenance: string }[];
 }
 
 /**
@@ -35,7 +37,12 @@ export function ReturnOutline({
   summaries,
   flaggedKeys,
   findingKeys,
+  adjustedLines,
 }: Props) {
+  const adjusted = useMemo(
+    () => new Map(adjustedLines.map((l) => [l.key, l])),
+    [adjustedLines],
+  );
   const [jurisdiction, setJurisdiction] = useState<Jurisdiction>("federal");
   const [query, setQuery] = useState("");
 
@@ -116,6 +123,7 @@ export function ReturnOutline({
                   {lines.map((line) => {
                     const active = line.key === selectedKey;
                     const work = summaries[`line:${line.key}`];
+                    const moved = adjusted.get(line.key);
                     return (
                       <li key={line.key}>
                         <button
@@ -183,8 +191,20 @@ export function ReturnOutline({
                               {line.sourceCount}
                             </span>
                           )}
-                          <span className="tnum shrink-0 text-right text-[12px] font-medium">
-                            {formatValue(line.value)}
+                          <span
+                            className={`tnum shrink-0 text-right text-[12px] font-medium ${
+                              moved ? "text-accent" : ""
+                            }`}
+                            title={
+                              moved
+                                ? `${moved.provenance} — the engine published ${formatValue(
+                                    moved.original,
+                                  )}`
+                                : undefined
+                            }
+                          >
+                            {formatValue(moved ? moved.value : line.value)}
+                            {moved && <span className="ml-0.5 text-[9px]">&bull;</span>}
                           </span>
                         </button>
                       </li>

@@ -10,6 +10,7 @@ import { EvidencePane, type DocRequest } from "./EvidencePane";
 import { NumberPanel } from "./NumberPanel";
 import { OverviewPane, type Overview } from "./OverviewPane";
 import type { ChecksData } from "./OpenItems";
+import type { AdjustedData } from "./Adjustments";
 import { ReturnOutline } from "./ReturnOutline";
 import { RoleSwitcher } from "./RoleSwitcher";
 import { Chip } from "./ui";
@@ -41,6 +42,7 @@ export function Workpaper({ meta, outline }: Props) {
   const [summaries, setSummaries] = useState<Record<string, ScopeSummary>>({});
   const [overview, setOverview] = useState<Overview | null>(null);
   const [checks, setChecks] = useState<ChecksData | null>(null);
+  const [adjusted, setAdjusted] = useState<AdjustedData | null>(null);
 
   /**
    * Bumped whenever the acting role changes, to force the detail panes to refetch.
@@ -61,6 +63,10 @@ export function Workpaper({ meta, outline }: Props) {
     fetch("/api/checks")
       .then((r) => r.json())
       .then((d: ChecksData) => setChecks(d))
+      .catch(() => undefined);
+    fetch("/api/adjusted")
+      .then((r) => r.json())
+      .then((d: AdjustedData) => setAdjusted(d))
       .catch(() => undefined);
   }, []);
 
@@ -169,6 +175,7 @@ export function Workpaper({ meta, outline }: Props) {
             summaries={summaries}
             flaggedKeys={flaggedKeys}
             findingKeys={findingKeys}
+            adjustedLines={adjusted?.lines ?? []}
           />
         </div>
         <div className="min-h-0 bg-surface">
@@ -176,6 +183,7 @@ export function Workpaper({ meta, outline }: Props) {
             <OverviewPane
               data={overview}
               checks={checks}
+              adjusted={adjusted}
               onSelect={selectLine}
               onOpenRef={openSource}
               onChanged={refreshWork}
@@ -188,6 +196,7 @@ export function Workpaper({ meta, outline }: Props) {
               onOpenSource={openSource}
               onWorkChanged={refreshWork}
               onBack={() => setSelectedKey(null)}
+              adjusted={adjusted}
             />
           )}
         </div>

@@ -13,6 +13,8 @@ import type {
   SignoffPayload,
 } from "@/lib/events/types";
 import { REVIEW_LEVELS, VERIFICATION_TYPES } from "@/lib/events/types";
+import { computeEffect, defaultCategory, requiresPartnerSignoff, type EffectCategory } from "@/lib/adjust/effect";
+import type { AdjustmentApprovedPayload, AdjustmentPayload } from "@/lib/events/types";
 import { buildGraph } from "@/lib/graph/graph";
 import { loadPacket } from "@/lib/packet/load";
 
@@ -68,6 +70,70 @@ export async function POST(request: Request) {
     case "variance_explained": {
       if (!String(body.payload?.text ?? "").trim()) return bad("A note needs text");
       break;
+    }
+
+    case "adjustment": {
+      const line = graph.lineByKey.get(body.scope.id);
+      if (!line) return bad(`No line "${body.scope.id}"`);
+      if (typeof line.value !== "number") return bad("Only numeric lines can be adjusted");
+
+      const to = Number(body.payload?.to);
+      if (!Number.isFinite(to)) return bad("A new value is required");
+
+      const reason = String(body.payload?.reason ?? "").trim();
+      if (!reason) return bad("An adjustment requires a reason");
+
+      const category = (body.payload?.category as EffectCategory) ?? defaultCategory(line);
+      if (!category) {
+        return bad(
+          "This line has no default tax-effect category; choose one so the effect can be estimated.",
+        );
+      }
+
+      // The effect decides whether a partner is required, so the server computes it.
+      const effect = computeEffect(graph, to - line.value, category, line.jurisdiction);
+      const payload: AdjustmentPayload = {
+        from: line.value,
+        to,
+        reason,
+        category,
+        effect: {
+          federal: effect.federal,
+          california: effect.california,
+          basis: effect.basis,
+          federalRate: effect.federalRate,
+          californiaRate: effect.californiaRate,
+          caveats: effect.caveats,
+        },
+        requiresPartner: requiresPartnerSignoff(effect),
+      };
+
+      return NextResponse.json({
+        event: append({ actorId: actor.id, type: "adjustment", scope: body.scope, payload }),
+      });
+    }
+
+    case "adjustment_approved": {
+      const target = getById(String(body.payload?.targetEventId ?? ""));
+      if (!target || target.type !== "adjustment") return bad("No such adjustment");
+      if (actor.role !== "partner") {
+        return bad(`${actor.name} is a ${actor.role} and cannot approve an adjustment.`, 403);
+      }
+      if (target.actorId === actor.id) {
+        return bad(`${actor.name} proposed this adjustment and may not also approve it.`, 403);
+      }
+      const payload: AdjustmentApprovedPayload = {
+        targetEventId: target.id,
+        note: body.payload?.note ? String(body.payload.note) : undefined,
+      };
+      return NextResponse.json({
+        event: append({
+          actorId: actor.id,
+          type: "adjustment_approved",
+          scope: body.scope,
+          payload,
+        }),
+      });
     }
 
     case "finding_dismissed": {

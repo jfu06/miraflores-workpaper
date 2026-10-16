@@ -16,6 +16,7 @@ import {
 } from "./reconciliation";
 import {
   basisGap,
+  incompleteInputs,
   nonStandardReference,
   parameterYear,
   staleDiagnostic,
@@ -44,6 +45,7 @@ export const CHECKS: Check[] = [
   stateSourcing,
   staleDiagnostic,
   basisGap,
+  incompleteInputs,
 ];
 
 const SEVERITY_ORDER: Record<Severity, number> = { high: 0, medium: 1, low: 2 };

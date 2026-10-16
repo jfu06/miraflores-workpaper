@@ -13,6 +13,7 @@ import { locatePage, segmentPage, type LocateMethod, type Segment } from "../gra
 import { resolveRef, type FactGraph, type ResolvedRef } from "../graph/graph";
 import { applyMask, isSensitive, maskValue } from "../auth/mask";
 import type { ActorInfo } from "../events/derive";
+import { defaultCategory } from "../adjust/effect";
 import { areaForForm } from "./areas";
 
 export interface OutlineLine {
@@ -108,6 +109,8 @@ export interface LineDetail {
   sources: ResolvedRef[];
   /** Diagnostics from the current version that cite this line. */
   diagnostics: { code: string; severity: string; message: string }[];
+  /** The rate category an adjustment here would be estimated with by default. */
+  defaultCategory: string | null;
 }
 
 function toLineRef(line: ReturnLine): LineRef {
@@ -153,6 +156,7 @@ export function buildLineDetail(graph: FactGraph, key: string): LineDetail | nul
     diagnostics: graph.current.diagnostics
       .filter((d) => d.refs.includes(key))
       .map((d) => ({ code: d.code, severity: d.severity, message: d.message })),
+    defaultCategory: defaultCategory(line),
   };
 }
 
