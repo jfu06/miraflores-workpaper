@@ -189,8 +189,41 @@ export function NumberPanel({
           )}
         </Section>
 
+        {detail.citedSources.length > 0 && (
+          <Section title={`Added in review · ${detail.citedSources.length}`}>
+            <p className="mb-2 text-[10px] leading-relaxed text-muted">
+              Evidence a person attached while working. The engine never saw it, so it is kept
+              apart from the sources it cited.
+            </p>
+            <ul className="space-y-1">
+              {detail.citedSources.map((source) => (
+                <li key={source.parsed.raw}>
+                  <button
+                    onClick={() => onOpenSource(source.parsed.raw)}
+                    className="flex w-full items-start gap-2 rounded px-1 py-1 text-left transition hover:bg-[#f4f4f2]"
+                  >
+                    <Chip tone={source.ok ? "accent" : "bad"}>
+                      {REF_KIND_LABEL[source.parsed.kind]}
+                    </Chip>
+                    <span className="min-w-0 flex-1">
+                      <span className="block text-[12px] font-medium">{source.title}</span>
+                      <span className="block text-[11px] text-muted">
+                        {source.ok ? source.subtitle : source.reason}
+                      </span>
+                      <span className="mt-0.5 block text-[10px] text-muted">
+                        Attached by {source.citedBy}, {source.citedAt.slice(0, 10)}
+                        {source.note ? ` — ${source.note}` : ""}
+                      </span>
+                    </span>
+                  </button>
+                </li>
+              ))}
+            </ul>
+          </Section>
+        )}
+
         {detail.sources.length > 0 && (
-          <Section title={`Evidence · ${detail.sources.length} reference${detail.sources.length === 1 ? "" : "s"}`}>
+          <Section title={`Evidence from the pipeline · ${detail.sources.length} reference${detail.sources.length === 1 ? "" : "s"}`}>
             {unresolved.length > 0 && (
               <p className="mb-2 rounded border border-[#f3d4d2] bg-bad-soft px-2 py-1.5 text-[11px] text-bad">
                 {unresolved.length} of these references do not resolve against the packet.

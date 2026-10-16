@@ -14,9 +14,20 @@ export interface ChecksData {
   checks: Omit<Check, "run">[];
   findings: Finding[];
   dismissals: Dismissal[];
+  /** Findings the workpaper has corrected by applying the figure they supplied. */
+  addressed: { findingId: string; lineKey: string; to: number; actorName: string; at: string }[];
   completedSteps: { step: string; actorName: string; at: string }[];
   requiredSteps: string[];
   diagnostics: Diagnostic[];
+  returnSignoffs: { level: string; actorName: string; at: string; valid: boolean }[];
+  documents: { id: string; documentType: string; title: string }[];
+}
+
+interface StepStatus {
+  done: boolean;
+  because: string;
+  /** References the step is derived from, so the evidence is one click away. */
+  refs?: string[];
 }
 
 /**
@@ -26,7 +37,60 @@ export interface ChecksData {
  * asserts is untrue. The rest are a person's to confirm, and are recorded as
  * events like any other act.
  */
-const DERIVED_STEPS: Record<string, (data: ChecksData, live: Finding[]) => { done: boolean; because: string }> = {
+const DERIVED_STEPS: Record<string, (data: ChecksData, live: Finding[]) => StepStatus> = {
+  "Engagement letter and consents signed": (data) => {
+    const letter = data.documents.filter((d) => d.documentType === "engagement_letter");
+    const consent = data.documents.filter((d) => d.documentType === "consent_7216");
+    const done = letter.length > 0 && consent.length > 0;
+    return {
+      done,
+      because: done
+        ? "Both are in the file."
+        : `Missing ${[letter.length === 0 && "engagement letter", consent.length === 0 && "section 7216 consent"].filter(Boolean).join(" and ")}.`,
+      refs: [...letter, ...consent].map((d) => d.id),
+    };
+  },
+  "Identity verified": (data) => {
+    const ids = data.documents.filter((d) => d.documentType === "identity_document");
+    return {
+      done: ids.length > 0,
+      because: ids.length > 0 ? `${ids.length} identity documents in the file.` : "No identity document.",
+      refs: ids.map((d) => d.id),
+    };
+  },
+  "Due diligence completed": (data) => {
+    const outstanding = data.diagnostics.filter((d) => d.code === "DUE_DILIGENCE_REQUIRED");
+    return {
+      done: outstanding.length === 0,
+      because:
+        outstanding.length === 0
+          ? "No outstanding due-diligence requirement."
+          : outstanding[0].message,
+      refs: outstanding.flatMap((d) => d.refs),
+    };
+  },
+  "Reviewer sign-off": (data) => {
+    const signoff = data.returnSignoffs.find((s) => s.level === "reviewer");
+    return {
+      done: Boolean(signoff?.valid),
+      because: !signoff
+        ? "The return has not been signed at reviewer level."
+        : signoff.valid
+          ? `${signoff.actorName}, ${signoff.at.slice(0, 10)}.`
+          : `Signed by ${signoff.actorName} but reopened by a later change.`,
+    };
+  },
+  "Partner sign-off": (data) => {
+    const signoff = data.returnSignoffs.find((s) => s.level === "partner");
+    return {
+      done: Boolean(signoff?.valid),
+      because: !signoff
+        ? "The return has not been signed at partner level."
+        : signoff.valid
+          ? `${signoff.actorName}, ${signoff.at.slice(0, 10)}.`
+          : `Signed by ${signoff.actorName} but reopened by a later change.`,
+    };
+  },
   "Prior-year variances explained": (_data, live) => {
     const open = live.filter((f) => f.checkId === "RECON-VARIANCE").length;
     return {
@@ -96,9 +160,14 @@ export function OpenItems({ data, onSelect, onOpenRef, onChanged }: Props) {
     () => new Set((data?.dismissals ?? []).map((d) => d.findingId)),
     [data],
   );
+  const addressedIds = useMemo(
+    () => new Set((data?.addressed ?? []).map((a) => a.findingId)),
+    [data],
+  );
   const live = useMemo(
-    () => (data?.findings ?? []).filter((f) => !dismissedIds.has(f.id)),
-    [data, dismissedIds],
+    () =>
+      (data?.findings ?? []).filter((f) => !dismissedIds.has(f.id) && !addressedIds.has(f.id)),
+    [data, dismissedIds, addressedIds],
   );
 
   if (!data) return <Section title="Open items">Loading…</Section>;
@@ -134,6 +203,7 @@ export function OpenItems({ data, onSelect, onOpenRef, onChanged }: Props) {
         <span className="text-muted">
           {" "}
           from {data.checks.length} checks · {high} high, {medium} medium
+          {addressedIds.size > 0 && ` · ${addressedIds.size} addressed`}
           {dismissedIds.size > 0 && (
             <>
               {" · "}
@@ -201,6 +271,19 @@ export function OpenItems({ data, onSelect, onOpenRef, onChanged }: Props) {
                         ? `${manual.actorName}, ${manual.at.slice(0, 10)}`
                         : ""}
                   </span>
+                  {derived?.refs && derived.refs.length > 0 && (
+                    <span className="ml-1.5 inline-flex flex-wrap gap-1 align-middle">
+                      {derived.refs.slice(0, 4).map((ref) => (
+                        <button
+                          key={ref}
+                          onClick={() => onOpenRef(ref)}
+                          className="transition hover:brightness-95"
+                        >
+                          <Chip tone="quiet">{ref}</Chip>
+                        </button>
+                      ))}
+                    </span>
+                  )}
                 </span>
                 {!derived && !manual && (
                   <button
@@ -242,6 +325,33 @@ export function OpenItems({ data, onSelect, onOpenRef, onChanged }: Props) {
           </ul>
         </Section>
       ))}
+
+      {data.addressed.length > 0 && (
+        <Section title={`Addressed · ${data.addressed.length}`}>
+          <ul className="space-y-1">
+            {data.addressed.map((item) => {
+              const finding = data.findings.find((f) => f.id === item.findingId);
+              return (
+                <li key={item.findingId} className="rounded border border-[#cfe2ef] bg-accent-soft px-2 py-1.5">
+                  <div className="text-[12px]">{finding?.title ?? item.findingId}</div>
+                  <div className="mt-0.5 text-[11px] text-muted">
+                    Corrected on{" "}
+                    <button onClick={() => onSelect(item.lineKey)} className="font-mono hover:text-accent">
+                      {item.lineKey}
+                    </button>{" "}
+                    to {formatMoney(item.to)} — {item.actorName}, {item.at.slice(0, 10)}
+                  </div>
+                </li>
+              );
+            })}
+          </ul>
+          <p className="mt-2 text-[10px] text-muted">
+            The check still reports these: it reads the packet, and the engine&rsquo;s return still
+            says what it said. They are closed here because the figure was changed to what the
+            other record holds — which is not the same as dismissing them.
+          </p>
+        </Section>
+      )}
 
       {showDismissed && data.dismissals.length > 0 && (
         <Section title={`Dismissed · ${data.dismissals.length}`}>

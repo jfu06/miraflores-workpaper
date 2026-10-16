@@ -14,7 +14,15 @@ import type {
 } from "@/lib/events/types";
 import { REVIEW_LEVELS, VERIFICATION_TYPES } from "@/lib/events/types";
 import { computeEffect, defaultCategory, requiresPartnerSignoff, type EffectCategory } from "@/lib/adjust/effect";
-import type { AdjustmentApprovedPayload, AdjustmentPayload } from "@/lib/events/types";
+import { buildLookup } from "@/lib/events/lookup";
+import type {
+  AdjustmentApprovedPayload,
+  AdjustmentPayload,
+  AnswerPayload,
+  CitePayload,
+  QuestionPayload,
+} from "@/lib/events/types";
+import { resolveRef } from "@/lib/graph/graph";
 import { buildGraph } from "@/lib/graph/graph";
 import { loadPacket } from "@/lib/packet/load";
 
@@ -133,6 +141,77 @@ export async function POST(request: Request) {
           scope: body.scope,
           payload,
         }),
+      });
+    }
+
+    case "question": {
+      const text = String(body.payload?.text ?? "").trim();
+      if (!text) return bad("A question needs text");
+
+      const to = String(body.payload?.to ?? "").trim();
+      if (!to) return bad("A question needs a recipient");
+      if (to !== "client" && !packet.firm.staff.some((s) => s.id === to)) {
+        return bad(`No colleague with id "${to}"`);
+      }
+
+      const payload: QuestionPayload = {
+        to,
+        text,
+        findingId: body.payload?.findingId ? String(body.payload.findingId) : undefined,
+      };
+      return NextResponse.json({
+        event: append({ actorId: actor.id, type: "question", scope: body.scope, payload }),
+      });
+    }
+
+    case "answer": {
+      const target = getById(String(body.payload?.targetEventId ?? ""));
+      if (!target || target.type !== "question") return bad("No such question");
+
+      const text = String(body.payload?.text ?? "").trim();
+      if (!text) return bad("An answer needs text");
+
+      const channel = String(body.payload?.channel ?? "portal");
+      if (!["portal", "phone", "email", "document"].includes(channel)) {
+        return bad(`Unknown channel: ${channel}`);
+      }
+
+      /**
+       * How the answer arrived is part of the evidence, so it is recorded rather
+       * than inferred. An answer recorded by a staff member on the client's
+       * behalf says so, and says whose answer it is.
+       */
+      const asked = target.payload as QuestionPayload;
+      const answeringForClient = asked.to === "client" && actor.role !== "client";
+      const payload: AnswerPayload = {
+        targetEventId: target.id,
+        text,
+        channel: channel as AnswerPayload["channel"],
+        onBehalfOf: answeringForClient
+          ? String(body.payload?.onBehalfOf ?? "the client")
+          : undefined,
+      };
+      return NextResponse.json({
+        event: append({ actorId: actor.id, type: "answer", scope: target.scope, payload }),
+      });
+    }
+
+    case "cite": {
+      const ref = String(body.payload?.ref ?? "").trim();
+      if (!ref) return bad("A citation needs a reference");
+      if (body.scope.kind !== "line") return bad("Evidence is attached to a line");
+      if (!graph.lineByKey.get(body.scope.id)) return bad(`No line "${body.scope.id}"`);
+
+      // A reference that does not resolve is not evidence.
+      const resolved = resolveRef(graph, ref, buildLookup(packet, listAll(10_000)));
+      if (!resolved.ok) return bad(`That reference does not resolve: ${resolved.reason}`);
+
+      const payload: CitePayload = {
+        ref,
+        note: body.payload?.note ? String(body.payload.note) : undefined,
+      };
+      return NextResponse.json({
+        event: append({ actorId: actor.id, type: "cite", scope: body.scope, payload }),
       });
     }
 

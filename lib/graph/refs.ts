@@ -27,6 +27,8 @@ export type RefKind =
   | "timeline"
   | "version"
   | "line"
+  /** A record this workpaper produced: an answer, a note, a verification. */
+  | "workpaper_record"
   | "unknown";
 
 export interface ParsedRef {
@@ -79,6 +81,20 @@ export function parseRef(raw: string): ParsedRef {
 
   if ((m = ref.match(/^timeline:(.+)$/))) return { raw, kind: "timeline", id: m[1] };
 
+  /**
+   * Evidence the workpaper itself produced.
+   *
+   * The packet's references all point at things that existed before the
+   * engagement: documents, readings, prior returns, agency records. A question
+   * put to the client and answered during the work is evidence too, and a number
+   * resting on it should say so in the same way — so it gets a reference in the
+   * same grammar, distinguished by prefix rather than by being a different kind
+   * of thing.
+   */
+  if ((m = ref.match(/^wp:([0-9a-f-]{36})$/i))) {
+    return { raw, kind: "workpaper_record", id: m[1] };
+  }
+
   // Timeline events reference computed versions directly as `v1` / `v2` / `v3`.
   if (/^v\d+$/.test(ref)) return { raw, kind: "version", id: ref };
 
@@ -104,6 +120,7 @@ export const REF_KIND_LABEL: Record<RefKind, string> = {
   timeline: "Timeline event",
   version: "Computed version",
   line: "Return line",
+  workpaper_record: "Recorded in this workpaper",
   unknown: "Unrecognized reference",
 };
 

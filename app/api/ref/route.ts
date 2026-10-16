@@ -1,5 +1,7 @@
 import { NextResponse } from "next/server";
 
+import { buildLookup } from "@/lib/events/lookup";
+import { listAll } from "@/lib/events/store";
 import { buildGraph, resolveRef } from "@/lib/graph/graph";
 import { loadPacket } from "@/lib/packet/load";
 
@@ -13,6 +15,7 @@ export async function GET(request: Request) {
   const ref = new URL(request.url).searchParams.get("ref");
   if (!ref) return NextResponse.json({ error: "Missing ?ref=" }, { status: 400 });
 
-  const graph = buildGraph(loadPacket());
-  return NextResponse.json(resolveRef(graph, ref));
+  const packet = loadPacket();
+  const graph = buildGraph(packet);
+  return NextResponse.json(resolveRef(graph, ref, buildLookup(packet, listAll(10_000))));
 }

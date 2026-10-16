@@ -27,6 +27,9 @@ export const REVIEW_LEVELS = ["preparer", "reviewer", "partner"] as const;
 export type ReviewLevel = (typeof REVIEW_LEVELS)[number];
 
 export type EventType =
+  | "question"
+  | "answer"
+  | "cite"
   | "adjustment"
   | "adjustment_approved"
   | "finding_dismissed"
@@ -108,6 +111,48 @@ export interface VarianceExplainedPayload {
 }
 
 /**
+ * A question put to the client or a colleague.
+ *
+ * Raised against the thing it is about — a line, a document, a finding — so it
+ * travels with that item rather than living in an inbox beside it.
+ */
+export interface QuestionPayload {
+  /** "client", or a staff id. */
+  to: string;
+  text: string;
+  /** Set when the question was raised from a check finding. */
+  findingId?: string;
+}
+
+/**
+ * The answer, which is evidence.
+ *
+ * Carries how it arrived, because "the client confirmed by phone" and "the client
+ * uploaded a statement" are not the same assurance, and the difference is exactly
+ * what a reviewer is judging.
+ */
+export interface AnswerPayload {
+  targetEventId: string;
+  text: string;
+  /** How the answer reached the firm. */
+  channel: "portal" | "phone" | "email" | "document";
+  /** Who said it, when the answer was recorded by someone else on their behalf. */
+  onBehalfOf?: string;
+}
+
+/**
+ * Attaching a reference to a line as evidence.
+ *
+ * Kept separate from the engine's own sources. A number's pipeline evidence and
+ * the evidence a person added during review are both evidence, but conflating
+ * them would hide which part of the support the engine never saw.
+ */
+export interface CitePayload {
+  ref: string;
+  note?: string;
+}
+
+/**
  * A change to a figure, with the original kept beside it.
  *
  * The effect is computed on the server and stored, not supplied by the caller:
@@ -170,7 +215,10 @@ export type EventPayload =
   | FindingDismissedPayload
   | RequiredStepPayload
   | AdjustmentPayload
-  | AdjustmentApprovedPayload;
+  | AdjustmentApprovedPayload
+  | QuestionPayload
+  | AnswerPayload
+  | CitePayload;
 
 export interface WorkpaperEvent<P = EventPayload> {
   /** Monotonic insertion order; the authoritative sequence. */

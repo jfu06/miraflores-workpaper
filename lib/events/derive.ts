@@ -6,7 +6,10 @@ import {
   type WorkpaperEvent,
 } from "./index";
 import type {
+  AnswerPayload,
+  CitePayload,
   NotePayload,
+  QuestionPayload,
   ReviewLevel,
   ReviewNotePayload,
   ReviewNoteResolvedPayload,
@@ -44,6 +47,39 @@ export interface ReviewNoteView extends NoteView {
   resolvedBy?: ActorInfo | null;
 }
 
+export interface AnswerView {
+  eventId: string;
+  text: string;
+  channel: AnswerPayload["channel"];
+  /** Whose answer it is, which is not always who recorded it. */
+  said: string;
+  recordedBy: ActorInfo | null;
+  at: string;
+  /** The reference by which this answer can be cited as evidence. */
+  ref: string;
+}
+
+export interface QuestionView {
+  eventId: string;
+  text: string;
+  to: string;
+  toName: string;
+  askedBy: ActorInfo | null;
+  at: string;
+  findingId?: string;
+  answer?: AnswerView;
+  /** True once the answer has been attached to this line as evidence. */
+  cited: boolean;
+}
+
+export interface CitationView {
+  eventId: string;
+  ref: string;
+  note?: string;
+  actor: ActorInfo | null;
+  at: string;
+}
+
 export interface FactsDiff {
   changedLines: { key: string; from: string | number; to: string | number }[];
   changedValues: { id: string; from: string | number | boolean; to: string | number | boolean }[];
@@ -74,7 +110,13 @@ export interface DerivedScope {
   verifications: VerificationView[];
   notes: NoteView[];
   reviewNotes: ReviewNoteView[];
+  /** Questions raised here, with their answers once they arrive. */
+  questions: QuestionView[];
+  /** Evidence a person attached, which the engine never saw. */
+  citations: CitationView[];
   openBlockingCount: number;
+  /** Questions still waiting on an answer. */
+  openQuestionCount: number;
   signoffs: SignoffView[];
   /** The hash the scope would be signed with right now. */
   currentHash: string;
@@ -138,6 +180,9 @@ export function deriveScope(
   const verifications: VerificationView[] = [];
   const notes: NoteView[] = [];
   const reviewNotes: ReviewNoteView[] = [];
+  const questions: QuestionView[] = [];
+  const citations: CitationView[] = [];
+  const answers = new Map<string, WorkpaperEvent>();
   const resolutions = new Map<string, WorkpaperEvent>();
 
   for (const event of live) {
@@ -175,9 +220,55 @@ export function deriveScope(
         resolutions.set(p.targetEventId, event);
         break;
       }
+      case "question": {
+        const p = event.payload as QuestionPayload;
+        questions.push({
+          eventId: event.id,
+          text: p.text,
+          to: p.to,
+          toName: p.to === "client" ? "the client" : (actors.get(p.to)?.name ?? p.to),
+          askedBy: actorOf(event.actorId),
+          at: event.at,
+          findingId: p.findingId,
+          cited: false,
+        });
+        break;
+      }
+      case "answer": {
+        answers.set((event.payload as AnswerPayload).targetEventId, event);
+        break;
+      }
+      case "cite": {
+        const p = event.payload as CitePayload;
+        citations.push({
+          eventId: event.id,
+          ref: p.ref,
+          note: p.note,
+          actor: actorOf(event.actorId),
+          at: event.at,
+        });
+        break;
+      }
       default:
         break;
     }
+  }
+
+  for (const question of questions) {
+    const answer = answers.get(question.eventId);
+    if (!answer) continue;
+    const p = answer.payload as AnswerPayload;
+    const recordedBy = actorOf(answer.actorId);
+    question.answer = {
+      eventId: answer.id,
+      text: p.text,
+      channel: p.channel,
+      said: p.onBehalfOf ?? recordedBy?.name ?? answer.actorId,
+      recordedBy,
+      at: answer.at,
+      ref: `wp:${answer.id}`,
+    };
+    question.cited = citations.some((c) => c.ref === `wp:${answer.id}`);
   }
 
   for (const note of reviewNotes) {
@@ -219,7 +310,10 @@ export function deriveScope(
     verifications,
     notes,
     reviewNotes,
+    questions,
+    citations,
     openBlockingCount,
+    openQuestionCount: questions.filter((q) => !q.answer).length,
     signoffs,
     currentHash,
     coveredFacts: facts,

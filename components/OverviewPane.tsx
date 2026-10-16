@@ -53,8 +53,12 @@ export function OverviewPane({
   }
 
   const { variance } = data;
-  const dismissed = new Set((checks?.dismissals ?? []).map((d) => d.findingId));
-  const openCount = (checks?.findings ?? []).filter((f) => !dismissed.has(f.id)).length;
+  // Closed is closed, however it was closed: dismissed with a reason, or corrected.
+  const closed = new Set([
+    ...(checks?.dismissals ?? []).map((d) => d.findingId),
+    ...(checks?.addressed ?? []).map((a) => a.findingId),
+  ]);
+  const openCount = (checks?.findings ?? []).filter((f) => !closed.has(f.id)).length;
   const adjustedCount = adjusted?.ledger.length ?? 0;
   const unexplained = variance.rows.filter(
     (r) => r.flagged && !data.explanations.some((e) => e.key === r.key),

@@ -6,6 +6,7 @@ import type { ReviewLevel, Scope, VerificationType } from "@/lib/events/types";
 import { REVIEW_LEVELS, VERIFICATION_TYPES } from "@/lib/events/types";
 import { appendEvent, fetchScope, type ScopeState } from "@/lib/view/client";
 import { formatValue } from "@/lib/view/format";
+import { Questions } from "./Questions";
 import { Chip, Section } from "./ui";
 
 const VERIFICATION_LABEL: Record<VerificationType, string> = {
@@ -128,6 +129,15 @@ export function WorkPanel({ scope, onChanged }: Props) {
         )}
         <AddVerification busy={busy} onAdd={(payload) => act({ type: "verification", scope, payload })} />
       </Section>
+
+      <Questions
+        scope={scope}
+        questions={state.questions}
+        openCount={state.openQuestionCount}
+        staff={state.staff ?? []}
+        busy={busy}
+        onAct={act}
+      />
 
       <Section title={`Review notes · ${state.openBlockingCount} blocking open`}>
         {state.reviewNotes.length > 0 && (

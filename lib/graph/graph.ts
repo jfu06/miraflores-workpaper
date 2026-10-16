@@ -26,6 +26,7 @@ import type {
   TimelineEvent,
   VersionAsset,
 } from "../packet/types";
+import type { AnswerPayload, QuestionPayload, VerificationPayload, WorkpaperEvent } from "../events/types";
 import { parseRef, resolveDotPath, resolvePointer, type ParsedRef } from "./refs";
 
 /**
@@ -159,6 +160,17 @@ export type RefTarget =
   | { kind: "line"; lineKey: string }
   | { kind: "record"; section: string; pointer: string };
 
+/**
+ * How `resolveRef` reaches records this workpaper produced.
+ *
+ * Passed in rather than held on the graph: the fact graph is built from the
+ * packet and is immutable, and the event log is neither.
+ */
+export interface WorkpaperLookup {
+  event(id: string): WorkpaperEvent | null;
+  actorName(id: string): string;
+}
+
 export interface ResolvedRef {
   parsed: ParsedRef;
   ok: boolean;
@@ -186,7 +198,11 @@ function money(value: unknown): string {
  * `ok: false` and a reason, because the workpaper has to be able to show that a
  * number's stated source does not exist.
  */
-export function resolveRef(graph: FactGraph, raw: string): ResolvedRef {
+export function resolveRef(
+  graph: FactGraph,
+  raw: string,
+  lookup?: WorkpaperLookup,
+): ResolvedRef {
   const alias = REF_ALIASES[raw];
   const parsed = parseRef(alias ?? raw);
   const base = { parsed: { ...parsed, raw }, aliasedFrom: alias ? raw : undefined };
@@ -397,6 +413,62 @@ export function resolveRef(graph: FactGraph, raw: string): ResolvedRef {
         title: `Return version ${version.version}`,
         subtitle: `${version.computed_at.slice(0, 10)} · ${version.trigger}`,
         target: { kind: "record", section: "return_versions", pointer: `/${version.version}` },
+      };
+    }
+
+    case "workpaper_record": {
+      if (!lookup) {
+        return fail("This reference points at a workpaper record, which was not loaded here.");
+      }
+      const event = lookup.event(parsed.id!);
+      if (!event) return fail("No workpaper record with this id");
+
+      const who = lookup.actorName(event.actorId);
+      const when = event.at.slice(0, 10);
+
+      if (event.type === "answer") {
+        const p = event.payload as AnswerPayload;
+        const said = p.onBehalfOf ?? who;
+        return {
+          ...base,
+          ok: true,
+          title: p.text,
+          subtitle: `Answered by ${said} ${
+            p.channel === "portal" ? "through the portal" : `by ${p.channel}`
+          }, ${when}${p.onBehalfOf ? `, recorded by ${who}` : ""}`,
+          target: { kind: "record", section: "workpaper", pointer: `/${event.id}` },
+          value: p.text,
+        };
+      }
+
+      if (event.type === "question") {
+        const p = event.payload as QuestionPayload;
+        return {
+          ...base,
+          ok: true,
+          title: p.text,
+          subtitle: `Asked of ${p.to === "client" ? "the client" : lookup.actorName(p.to)} by ${who}, ${when} — not yet answered`,
+          target: { kind: "record", section: "workpaper", pointer: `/${event.id}` },
+        };
+      }
+
+      if (event.type === "verification") {
+        const p = event.payload as VerificationPayload;
+        return {
+          ...base,
+          ok: true,
+          title: p.verificationType.replace(/_/g, " "),
+          subtitle: `${p.note ? `${p.note} — ` : ""}${who}, ${when}`,
+          target: { kind: "record", section: "workpaper", pointer: `/${event.id}` },
+        };
+      }
+
+      return {
+        ...base,
+        ok: true,
+        title: event.type.replace(/_/g, " "),
+        subtitle: `${who}, ${when}`,
+        target: { kind: "record", section: "workpaper", pointer: `/${event.id}` },
       };
     }
 

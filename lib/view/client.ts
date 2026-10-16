@@ -6,6 +6,7 @@ import type { DocumentDetail, LineDetail } from "./models";
 
 export interface ScopeState extends DerivedScope {
   actor: ActorInfo;
+  staff: ActorInfo[];
   signoffChecks: Record<string, SignoffCheck>;
 }
 

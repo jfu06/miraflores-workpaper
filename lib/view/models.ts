@@ -10,7 +10,7 @@
 
 import type { Jurisdiction, PacketDocument, ReturnLine } from "../packet/types";
 import { locatePage, segmentPage, type LocateMethod, type Segment } from "../graph/document";
-import { resolveRef, type FactGraph, type ResolvedRef } from "../graph/graph";
+import { resolveRef, type FactGraph, type ResolvedRef, type WorkpaperLookup } from "../graph/graph";
 import { applyMask, isSensitive, maskValue } from "../auth/mask";
 import type { ActorInfo } from "../events/derive";
 import { defaultCategory } from "../adjust/effect";
@@ -106,7 +106,15 @@ export interface LineDetail {
   inputs: LineRef[];
   /** Lines that take this one as an input, so a change can be traced downstream. */
   dependents: LineRef[];
+  /** The evidence the engine cited when it produced this figure. */
   sources: ResolvedRef[];
+  /**
+   * Evidence a person attached during review — an answer from the client, a
+   * record the pipeline never read. Kept apart from the engine's own sources,
+   * because conflating them would hide which part of the support the engine
+   * never saw.
+   */
+  citedSources: (ResolvedRef & { citedBy: string; citedAt: string; note?: string })[];
   /** Diagnostics from the current version that cite this line. */
   diagnostics: { code: string; severity: string; message: string }[];
   /** The rate category an adjustment here would be estimated with by default. */
@@ -125,7 +133,16 @@ function toLineRef(line: ReturnLine): LineRef {
   };
 }
 
-export function buildLineDetail(graph: FactGraph, key: string): LineDetail | null {
+export interface WorkpaperEvidence {
+  citations: { ref: string; note?: string; by: string; at: string }[];
+  lookup: WorkpaperLookup;
+}
+
+export function buildLineDetail(
+  graph: FactGraph,
+  key: string,
+  workpaper?: WorkpaperEvidence,
+): LineDetail | null {
   const line = graph.lineByKey.get(key);
   if (!line) return null;
 
@@ -152,7 +169,13 @@ export function buildLineDetail(graph: FactGraph, key: string): LineDetail | nul
     ruleText: graph.rules[line.rule],
     inputs,
     dependents,
-    sources: line.sources.map((ref) => resolveRef(graph, ref)),
+    sources: line.sources.map((ref) => resolveRef(graph, ref, workpaper?.lookup)),
+    citedSources: (workpaper?.citations ?? []).map((citation) => ({
+      ...resolveRef(graph, citation.ref, workpaper?.lookup),
+      citedBy: citation.by,
+      citedAt: citation.at,
+      note: citation.note,
+    })),
     diagnostics: graph.current.diagnostics
       .filter((d) => d.refs.includes(key))
       .map((d) => ({ code: d.code, severity: d.severity, message: d.message })),

@@ -33,6 +33,13 @@ export async function GET(request: Request) {
   return NextResponse.json({
     ...derived,
     actor,
+    /** Colleagues a question can be addressed to. */
+    staff: packet.firm.staff.map((s) => ({
+      id: s.id,
+      name: s.name,
+      role: s.role,
+      sensitiveDataClearance: s.sensitive_data_clearance,
+    })),
     signoffChecks: Object.fromEntries(
       REVIEW_LEVELS.map((level) => [level, canSignOff(derived, actor, level)]),
     ),

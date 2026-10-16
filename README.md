@@ -148,10 +148,41 @@ re-tests the condition each of them asserts. It currently reports nothing, which
 is the right answer: v3 dropped the two diagnostics v1 and v2 carried, once the
 late K-1s arrived.
 
+A finding closes in one of two ways, and the difference is kept. **Dismissed**
+means someone argued it away, with a reason and an author. **Addressed** means
+the figure was changed to what the other record holds — the check goes on
+reporting, because the engine's return still says what it said, but the item is
+closed and the required step it feeds ticks itself.
+
 Two findings converge from opposite directions and are worth the example. The
 tie-out check adds the Meridian lots itself and reports the summary 250 adrift;
 the unread-page check reads page 32 and finds a single lot with proceeds of
 250.00. They share no code. See [FINDINGS.md](FINDINGS.md).
+
+### Questions that become evidence
+
+The brief asks for "questions to the client or colleagues that become evidence",
+and the second half is the part that needs a design decision rather than a form.
+
+A question is raised against the thing it is about — a line, a document, a
+finding — so it travels with that item instead of living in an inbox beside it.
+When the answer arrives it is recorded with **how it arrived**, because "the
+client confirmed by phone" and "the client uploaded a statement" are not the same
+assurance, and with **whose answer it is**, which is not always who typed it.
+
+Then the answer gets a reference in the same grammar as everything else —
+`wp:<id>` beside `ev-0035` and `qa-14` — and can be attached to the line, where
+it resolves and opens like any other source. `resolveRef` learned one more kind;
+nothing else changed.
+
+Attached evidence is shown **apart from** the engine's own sources, under "added
+in review". Both are evidence, but conflating them would hide which part of a
+number's support the engine never saw.
+
+The packet is full of answers that arrived this way and were never recorded as
+evidence of anything: `msg-08` resolves the handwritten receipt whose first digit
+is ambiguous, `msg-07` supplies the cost of the crypto lot the engine gave a zero
+basis. Those are the shape this models.
 
 ### Adjusting, and the four kinds of number
 
@@ -225,8 +256,9 @@ with that field highlighted in place — and lists everything else read from the
 and where each value landed.
 
 Below that, the work on the line: record a verification against one of the firm's
-five types, raise a review note that blocks filing, resolve or withdraw either, and
-sign off at preparer, reviewer or partner level. Raise a blocking note on a signed
+five types, raise a question with the client or a colleague and attach the answer
+as evidence, raise a review note that blocks filing, resolve or withdraw any of
+them, and sign off at preparer, reviewer or partner level. Raise a blocking note on a signed
 line and both signatures reopen in place, saying what changed. Withdraw the note
 and they come back, because the hash returns to what it was — while all five events
 stay in the history, two of them struck through.
@@ -239,8 +271,11 @@ where the two years are not measured on the same basis; the state of each review
 area against the firm's budget; every flagged variance, with the not-comparable
 and unmatched ones called out ahead of the swings; and open items — the check
 findings, the firm's twelve required steps, and the engine's diagnostics in one
-list. Five of the twelve steps are derived from the checks rather than ticked by
-hand, so a step cannot be marked done while the thing it asserts is untrue.
+list. Ten of the twelve steps are derived — from the checks, the documents in the
+file, and the sign-offs on the return — so a step cannot be marked done while the
+thing it asserts is untrue, and each links to what it was derived from. The two
+that stay manual are a human act of review and a client act that belongs to the
+filing timeline.
 
 ## Not built yet
 
