@@ -6,6 +6,7 @@ import { append } from "@/lib/events/store";
 import type { SensitiveViewPayload } from "@/lib/events/types";
 import { buildGraph } from "@/lib/graph/graph";
 import { loadPacket } from "@/lib/packet/load";
+import { getClock } from "@/lib/time/server";
 
 /**
  * Reveal one masked value.
@@ -17,7 +18,8 @@ import { loadPacket } from "@/lib/packet/load";
 export async function POST(request: Request) {
   const { evId } = (await request.json()) as { evId?: string };
   const packet = loadPacket();
-  const graph = buildGraph(packet);
+  const clock = await getClock();
+  const graph = buildGraph(packet, clock);
   const actor = await getActor(packet);
 
   const ev = evId ? graph.evById.get(evId) : undefined;

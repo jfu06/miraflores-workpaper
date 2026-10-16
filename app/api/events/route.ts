@@ -14,10 +14,16 @@ import type {
 } from "@/lib/events/types";
 import { REVIEW_LEVELS, VERIFICATION_TYPES } from "@/lib/events/types";
 import { computeEffect, defaultCategory, requiresPartnerSignoff, type EffectCategory } from "@/lib/adjust/effect";
+import { appliedAdjustments, buildLedger } from "@/lib/adjust/ledger";
+import { buildFormIndex, recompute } from "@/lib/adjust/recompute";
+import { buildFilingState, buildSnapshot, canAdjust } from "@/lib/filing/state";
+import { createHash } from "node:crypto";
 import { buildLookup } from "@/lib/events/lookup";
 import type {
   AdjustmentApprovedPayload,
   AdjustmentPayload,
+  AmendmentPayload,
+  FilingPayload,
   AnswerPayload,
   CitePayload,
   QuestionPayload,
@@ -25,6 +31,7 @@ import type {
 import { resolveRef } from "@/lib/graph/graph";
 import { buildGraph } from "@/lib/graph/graph";
 import { loadPacket } from "@/lib/packet/load";
+import { getClock } from "@/lib/time/server";
 
 export async function GET(request: Request) {
   const limit = Number(new URL(request.url).searchParams.get("limit") ?? 200);
@@ -57,10 +64,25 @@ interface Body {
 export async function POST(request: Request) {
   const body = (await request.json()) as Body;
   const packet = loadPacket();
-  const graph = buildGraph(packet);
+  const clock = await getClock();
+  const graph = buildGraph(packet, clock);
   const actor = await getActor(packet);
 
   const bad = (reason: string, status = 400) => NextResponse.json({ error: reason }, { status });
+
+  /**
+   * Replay is read-only.
+   *
+   * Recording work while the file is shown as it stood at an earlier moment
+   * would be writing history, not replaying it — the event would carry today's
+   * timestamp against a view of March.
+   */
+  if (!clock.live) {
+    return bad(
+      `The file is being shown as it stood on ${clock.asOf?.slice(0, 10)}. Return to live to record anything.`,
+      409,
+    );
+  }
 
   if (!body?.scope?.kind || !body.scope.id) return bad("Missing scope");
 
@@ -80,7 +102,76 @@ export async function POST(request: Request) {
       break;
     }
 
+    case "filing": {
+      const jurisdiction = String(body.payload?.jurisdiction ?? "");
+      if (!["federal", "california"].includes(jurisdiction)) {
+        return bad("A filing names a jurisdiction");
+      }
+      if (actor.role !== "partner" && actor.role !== "reviewer") {
+        return bad(`${actor.name} is a ${actor.role} and cannot transmit a return.`, 403);
+      }
+
+      const names = new Map([
+        ...packet.firm.staff.map((s) => [s.id, s.name] as const),
+        ...packet.firm.client_users.map((c) => [c.id, c.name] as const),
+      ]);
+      const ledger = buildLedger(listAll(10_000), (id) => names.get(id) ?? id);
+      const state = buildFilingState(listAll(10_000), (id) => names.get(id) ?? id);
+
+      if (state.filedJurisdictions.includes(jurisdiction)) {
+        return bad(`The ${jurisdiction} return has already been filed.`);
+      }
+
+      const result = recompute(graph, appliedAdjustments(ledger), buildFormIndex(graph));
+      const snapshot = buildSnapshot(graph, result.lines);
+
+      /**
+       * The submission identifier is the agency's, not ours: where the file
+       * records an accepted transmission for this jurisdiction, that is the one
+       * the filing refers to.
+       */
+      const accepted = (
+        packet.tax_agency_records.efile as {
+          jurisdiction: string;
+          status: string;
+          submission_id: string;
+          date: string;
+        }[]
+      ).find((e) => e.jurisdiction === jurisdiction && e.status === "accepted");
+
+      const payload: FilingPayload = {
+        jurisdiction,
+        submissionId: String(body.payload?.submissionId || accepted?.submission_id || ""),
+        acceptedAt: String(body.payload?.acceptedAt || accepted?.date || new Date().toISOString()),
+        snapshot,
+        adjustmentEventIds: ledger.filter((e) => e.applied).map((e) => e.eventId),
+        contentHash: createHash("sha256").update(JSON.stringify(snapshot)).digest("hex"),
+      };
+
+      return NextResponse.json({
+        event: append({ actorId: actor.id, type: "filing", scope: body.scope, payload }),
+      });
+    }
+
+    case "amendment_opened": {
+      const names = new Map(packet.firm.staff.map((s) => [s.id, s.name] as const));
+      const state = buildFilingState(listAll(10_000), (id) => names.get(id) ?? id);
+      if (!state.frozen) return bad("Nothing has been filed, so there is nothing to amend.");
+
+      const reason = String(body.payload?.reason ?? "").trim();
+      if (!reason) return bad("An amendment needs a reason");
+
+      const payload: AmendmentPayload = { reason };
+      return NextResponse.json({
+        event: append({ actorId: actor.id, type: "amendment_opened", scope: body.scope, payload }),
+      });
+    }
+
     case "adjustment": {
+      const names = new Map(packet.firm.staff.map((s) => [s.id, s.name] as const));
+      const allowed = canAdjust(buildFilingState(listAll(10_000), (id) => names.get(id) ?? id));
+      if (!allowed.ok) return bad(allowed.reason!, 409);
+
       const line = graph.lineByKey.get(body.scope.id);
       if (!line) return bad(`No line "${body.scope.id}"`);
       if (typeof line.value !== "number") return bad("Only numeric lines can be adjusted");

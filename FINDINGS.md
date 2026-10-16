@@ -11,7 +11,7 @@ input, not a verdict: one check re-tests the condition each one asserts, and the
 findings marked **[not in diagnostics]** are ones the engine does not report.
 
 ```
-16 checks, 106 findings — 15 high, 57 medium, 34 low
+17 checks, 107 findings — 16 high, 57 medium, 34 low
 
 EV-NOT-ON-PAGE             1   Extracted amount does not appear on its own page
 EV-LOW-CONFIDENCE          2   Low-confidence reading used on the return
@@ -29,6 +29,7 @@ INT-STATE-SOURCE           2   All of an item sourced to CA despite part-year re
 INT-STALE-DIAGNOSTIC       0   An engine diagnostic is no longer true
 INT-BASIS-GAP              2   A basis record has a missing year
 INT-INPUTS-INCOMPLETE      5   A line's declared inputs cannot produce its value
+RECON-SCHC-GROSS           1   Gross receipts do not reconcile to third-party forms
 ```
 
 Two checks reporting nothing is also a result. `DOC-SUPERSEDED-USED` is clean
@@ -340,5 +341,52 @@ where no combination of the declared inputs reproduces the published value.
 **Disposition:** the five are excluded from recomputation and reported. An
 adjustment upstream of them stops there, and the workpaper says so rather than
 carrying a figure it cannot stand behind.
+
+---
+
+## F-008 — Form 1099-K is added to books revenue it is already inside **[not in diagnostics]**
+
+**Check:** `RECON-SCHC-GROSS`. Adds the Forms 1099-NEC itself, reads the books
+total and the deposits detail, and reconciles them.
+
+This is the largest finding in the file, and it is the second item the IRS is
+examining.
+
+```
+SchC.1  Gross receipts  163,700
+        = books revenue 151,300 + the whole Form 1099-K 12,400
+```
+
+`R-SCHC-GROSS` adds card amounts "that the engine could not match to a books
+deposit", and it matched none. But D15, the books transaction detail, says in its
+own words:
+
+> Atlas Outdoor Gear paid 41,200.00 in 2025, of which **12,400.00 arrived through
+> Paywell Payments card processing (deposited gross** …). **Client deposits are
+> recorded as Sales - client projects.**
+
+The 1099-K reports that same 12,400. It is already inside books revenue, and was
+added again.
+
+**The arithmetic confirms it twice.** Forms 1099-NEC total 142,000; the deposits
+detail records 9,300 from eleven clients who issued no form. 142,000 + 9,300 =
+151,300, which is books revenue to the dollar — leaving nothing for the card
+total to be other than a subset of what is already there.
+
+Overstated by **12,400**, about **4,402 of federal tax** at the packet's own
+Schedule C rate, before California.
+
+**Why the design found it:** because the examination letter said to look. Letter
+566 asks the firm to "reconcile Schedule C gross receipts to Forms 1099-NEC
+(142,000) and Form 1099-K (12,400)", and a firm that knows an area is examined
+should be checking it before the letter arrives — so that reconciliation is a
+check. The evidence it needed was extracted and sitting in `ev-0109`; what was
+missing was anything that read it. `SchC.1` cites the books total and the 1099-K
+and does not cite the record that says the one contains the other.
+
+**Disposition:** adjust to 151,300. Because this was found after filing in the
+walkthrough, it goes through the amendment layer: the filed return stays as
+transmitted, the amendment sits on top, and the change needs partner approval at
+4,402 of effect.
 
 ---

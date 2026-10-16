@@ -5,6 +5,7 @@ import { canSignOff, deriveScope } from "@/lib/events/derive";
 import { REVIEW_LEVELS, type Scope, type ScopeKind } from "@/lib/events/types";
 import { buildGraph } from "@/lib/graph/graph";
 import { loadPacket } from "@/lib/packet/load";
+import { getClock } from "@/lib/time/server";
 
 const SCOPE_KINDS: ScopeKind[] = ["line", "document", "extracted_value", "return"];
 
@@ -24,7 +25,7 @@ export async function GET(request: Request) {
   }
 
   const packet = loadPacket();
-  const graph = buildGraph(packet);
+  const graph = buildGraph(packet, await getClock());
   const actor = await getActor(packet);
   const scope: Scope = { kind, id };
 

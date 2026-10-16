@@ -7,6 +7,7 @@ import { appendGroup, listAll } from "@/lib/events/store";
 import type { AdjustmentPayload, AppendEvent, RevertPayload } from "@/lib/events/types";
 import { buildGraph } from "@/lib/graph/graph";
 import { loadPacket } from "@/lib/packet/load";
+import { getClock } from "@/lib/time/server";
 
 /**
  * Acting on many items at once, and undoing it.
@@ -28,8 +29,16 @@ export async function POST(request: Request) {
   };
 
   const packet = loadPacket();
-  const graph = buildGraph(packet);
+  const clock = await getClock();
+  const graph = buildGraph(packet, clock);
   const actor = await getActor(packet);
+
+  if (!clock.live) {
+    return NextResponse.json(
+      { error: "Replay is read-only. Return to live to record anything." },
+      { status: 409 },
+    );
+  }
 
   if (body.action === "undo_group") {
     const groupId = body.groupId;

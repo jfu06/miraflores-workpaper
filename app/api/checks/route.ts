@@ -8,6 +8,7 @@ import type { FindingDismissedPayload, RevertPayload } from "@/lib/events/types"
 import { allFindings, runChecks } from "@/lib/checks/run";
 import { buildGraph } from "@/lib/graph/graph";
 import { loadPacket } from "@/lib/packet/load";
+import { getClock } from "@/lib/time/server";
 
 export interface Dismissal {
   findingId: string;
@@ -26,7 +27,7 @@ export interface Dismissal {
  */
 export async function GET() {
   const packet = loadPacket();
-  const graph = buildGraph(packet);
+  const graph = buildGraph(packet, await getClock());
 
   const events = listAll(10_000);
   const reverted = new Set<string>();
@@ -124,7 +125,7 @@ export async function GET() {
       valid: s.valid,
     })),
     /** Documents the required steps are derived against. */
-    documents: packet.documents.map((d) => ({
+    documents: graph.documents.map((d) => ({
       id: d.id,
       documentType: d.document_type,
       title: d.title,

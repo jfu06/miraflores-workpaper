@@ -11,6 +11,9 @@ import { NumberPanel } from "./NumberPanel";
 import { OverviewPane, type Overview } from "./OverviewPane";
 import type { ChecksData } from "./OpenItems";
 import type { AdjustedData } from "./Adjustments";
+import type { SeasonData } from "./Season";
+import type { FilingState } from "@/lib/filing/state";
+import type { Clock } from "@/lib/time/clock";
 import { ReturnOutline } from "./ReturnOutline";
 import { RoleSwitcher } from "./RoleSwitcher";
 import { Chip } from "./ui";
@@ -33,9 +36,10 @@ export interface WorkpaperMeta {
 interface Props {
   meta: WorkpaperMeta;
   outline: OutlineGroup[];
+  clock: Clock;
 }
 
-export function Workpaper({ meta, outline }: Props) {
+export function Workpaper({ meta, outline, clock }: Props) {
   const [selectedKey, setSelectedKey] = useState<string | null>(null);
   const [docRequest, setDocRequest] = useState<DocRequest | null>(null);
   const [record, setRecord] = useState<ResolvedRef | null>(null);
@@ -43,6 +47,8 @@ export function Workpaper({ meta, outline }: Props) {
   const [overview, setOverview] = useState<Overview | null>(null);
   const [checks, setChecks] = useState<ChecksData | null>(null);
   const [adjusted, setAdjusted] = useState<AdjustedData | null>(null);
+  const [season, setSeason] = useState<SeasonData | null>(null);
+  const [filing, setFiling] = useState<FilingState | null>(null);
 
   /**
    * Bumped whenever the acting role changes, to force the detail panes to refetch.
@@ -68,12 +74,26 @@ export function Workpaper({ meta, outline }: Props) {
       .then((r) => r.json())
       .then((d: AdjustedData) => setAdjusted(d))
       .catch(() => undefined);
+    fetch("/api/clock")
+      .then((r) => r.json())
+      .then((d: SeasonData & { filing: FilingState }) => {
+        setSeason(d);
+        setFiling(d.filing);
+      })
+      .catch(() => undefined);
   }, []);
 
   const refreshWork = useCallback(() => {
     setRevision((r) => r + 1);
     loadDerived();
   }, [loadDerived]);
+
+  /**
+   * Moving the clock changes what the server will serve for everything, so the
+   * page is reloaded rather than patched: a pane holding a live response beside
+   * a replayed one would be the inconsistency this workpaper exists to prevent.
+   */
+  const onClockMoved = useCallback(() => window.location.reload(), []);
 
   useEffect(loadDerived, [loadDerived]);
 
@@ -132,6 +152,32 @@ export function Workpaper({ meta, outline }: Props) {
 
   return (
     <div className="flex h-dvh flex-col overflow-hidden">
+      {!clock.live && (
+        <div className="flex shrink-0 items-center gap-2 bg-warn-soft px-4 py-1.5 text-[11px] text-warn">
+          <span className="font-semibold uppercase tracking-[0.07em]">Replay</span>
+          <span>
+            Showing the file as it stood on {clock.asOf?.slice(0, 10)}
+            {season?.currentVersion && !season.beforeFirstRun && ` — engine version ${season.currentVersion}`}
+            . Documents that had not arrived are not here, and nothing can be recorded.
+            {season?.beforeFirstRun &&
+              " The engine had not computed a return at this date; the figures shown are the first run's."}
+          </span>
+          <button
+            onClick={async () => {
+              await fetch("/api/clock", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ asOf: null }),
+              });
+              window.location.reload();
+            }}
+            className="ml-auto rounded bg-warn px-2 py-0.5 text-[10px] font-medium text-white"
+          >
+            Return to live
+          </button>
+        </div>
+      )}
+
       <header className="flex shrink-0 items-center gap-4 border-b border-edge bg-surface px-4 py-2">
         <div className="min-w-0">
           <div className="flex items-baseline gap-2">
@@ -184,6 +230,9 @@ export function Workpaper({ meta, outline }: Props) {
               data={overview}
               checks={checks}
               adjusted={adjusted}
+              season={season}
+              filing={filing}
+              onClockMoved={onClockMoved}
               onSelect={selectLine}
               onOpenRef={openSource}
               onChanged={refreshWork}

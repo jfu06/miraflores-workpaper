@@ -5,6 +5,7 @@ import { summarizeAll } from "@/lib/events/summary";
 import type { RevertPayload } from "@/lib/events/types";
 import { buildGraph } from "@/lib/graph/graph";
 import { loadPacket } from "@/lib/packet/load";
+import { getClock } from "@/lib/time/server";
 import { buildAreaSummaries, buildComparisons } from "@/lib/view/overview";
 import { buildVarianceReport } from "@/lib/view/variance";
 
@@ -42,7 +43,7 @@ function explanations(): VarianceExplanation[] {
 
 export async function GET() {
   const packet = loadPacket();
-  const graph = buildGraph(packet);
+  const graph = buildGraph(packet, await getClock());
   const variance = buildVarianceReport(graph);
   const explained = explanations();
   const explainedKeys = new Set(explained.map((e) => e.key));

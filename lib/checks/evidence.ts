@@ -35,7 +35,7 @@ export const valueNotOnPage: Check = {
   run({ graph }) {
     const findings: Finding[] = [];
 
-    for (const doc of graph.packet.documents) {
+    for (const doc of graph.documents) {
       for (const page of doc.pages) {
         const values = graph.evsByDocPage.get(`${doc.id}#${page.page}`) ?? [];
         if (values.length === 0) continue;
@@ -83,7 +83,7 @@ export const lowConfidence: Check = {
     const THRESHOLD = 0.8;
     const findings: Finding[] = [];
 
-    for (const ev of graph.packet.extracted_values) {
+    for (const ev of graph.documents.flatMap((d) => graph.evsByDoc.get(d.id) ?? [])) {
       if (ev.confidence >= THRESHOLD) continue;
       const landedOn = graph.linesByEv.get(ev.id) ?? [];
       if (landedOn.length === 0) continue;
@@ -123,7 +123,7 @@ export const documentConflict: Check = {
     const findings: Finding[] = [];
     const groups = new Map<string, PacketDocument[]>();
 
-    for (const doc of graph.packet.documents) {
+    for (const doc of graph.documents) {
       // Tax year belongs in the key: the 2023 and 2025 Schedule K-1 from the same
       // S corporation are not two copies of one form, and their boxes are
       // supposed to differ.
@@ -234,7 +234,7 @@ export const detailSummaryTieOut: Check = {
   run({ graph }) {
     const findings: Finding[] = [];
 
-    for (const doc of graph.packet.documents) {
+    for (const doc of graph.documents) {
       const values = graph.evsByDoc.get(doc.id) ?? [];
       if (values.length === 0) continue;
 
@@ -339,7 +339,7 @@ export const unreadPages: Check = {
   run({ graph }) {
     const findings: Finding[] = [];
 
-    for (const doc of graph.packet.documents) {
+    for (const doc of graph.documents) {
       if (doc.extraction.status === "not_extracted") continue;
 
       /**

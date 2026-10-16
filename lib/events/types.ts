@@ -27,6 +27,8 @@ export const REVIEW_LEVELS = ["preparer", "reviewer", "partner"] as const;
 export type ReviewLevel = (typeof REVIEW_LEVELS)[number];
 
 export type EventType =
+  | "filing"
+  | "amendment_opened"
   | "question"
   | "answer"
   | "cite"
@@ -108,6 +110,26 @@ export interface RevertPayload {
  */
 export interface VarianceExplainedPayload {
   text: string;
+}
+
+/**
+ * The return as transmitted.
+ *
+ * Carries a snapshot of every line rather than a pointer to "the current
+ * version", because the whole purpose is to survive everything that happens
+ * afterwards — including amendments, and including an examination two years on.
+ */
+export interface FilingPayload {
+  jurisdiction: string;
+  submissionId: string;
+  acceptedAt: string;
+  snapshot: Record<string, number | string>;
+  adjustmentEventIds: string[];
+  contentHash: string;
+}
+
+export interface AmendmentPayload {
+  reason: string;
 }
 
 /**
@@ -218,7 +240,9 @@ export type EventPayload =
   | AdjustmentApprovedPayload
   | QuestionPayload
   | AnswerPayload
-  | CitePayload;
+  | CitePayload
+  | FilingPayload
+  | AmendmentPayload;
 
 export interface WorkpaperEvent<P = EventPayload> {
   /** Monotonic insertion order; the authoritative sequence. */

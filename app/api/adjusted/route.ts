@@ -5,6 +5,7 @@ import { balanceMovements, buildLedger, appliedAdjustments, summariseEffect } fr
 import { buildFormIndex, recompute } from "@/lib/adjust/recompute";
 import { buildGraph } from "@/lib/graph/graph";
 import { loadPacket } from "@/lib/packet/load";
+import { getClock } from "@/lib/time/server";
 
 /**
  * The return as adjusted: the ledger, what each adjustment moved, and where the
@@ -12,7 +13,7 @@ import { loadPacket } from "@/lib/packet/load";
  */
 export async function GET() {
   const packet = loadPacket();
-  const graph = buildGraph(packet);
+  const graph = buildGraph(packet, await getClock());
 
   const names = new Map([
     ...packet.firm.staff.map((s) => [s.id, s.name] as const),

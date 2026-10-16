@@ -5,6 +5,7 @@ import { listAll, listForScope } from "@/lib/events/store";
 import type { CitePayload, RevertPayload } from "@/lib/events/types";
 import { buildGraph } from "@/lib/graph/graph";
 import { loadPacket } from "@/lib/packet/load";
+import { getClock } from "@/lib/time/server";
 import { buildLineDetail } from "@/lib/view/models";
 
 /**
@@ -18,7 +19,7 @@ import { buildLineDetail } from "@/lib/view/models";
 export async function GET(_request: Request, context: { params: Promise<{ key: string }> }) {
   const { key } = await context.params;
   const packet = loadPacket();
-  const graph = buildGraph(packet);
+  const graph = buildGraph(packet, await getClock());
   const lineKey = decodeURIComponent(key);
 
   const all = listAll(10_000);

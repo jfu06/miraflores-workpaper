@@ -12,6 +12,7 @@ import {
   agencyReconciliation,
   hedgedClientAssertion,
   questionnaireConflict,
+  schcGrossReceipts,
   unexplainedVariance,
 } from "./reconciliation";
 import {
@@ -37,6 +38,7 @@ export const CHECKS: Check[] = [
   detailSummaryTieOut,
   unreadPages,
   agencyReconciliation,
+  schcGrossReceipts,
   questionnaireConflict,
   hedgedClientAssertion,
   unexplainedVariance,

@@ -1,5 +1,6 @@
 import { buildGraph } from "@/lib/graph/graph";
 import { loadPacket } from "@/lib/packet/load";
+import { getClock } from "@/lib/time/server";
 import { buildOutline } from "@/lib/view/models";
 import { Workpaper, type WorkpaperMeta } from "@/components/Workpaper";
 
@@ -8,9 +9,10 @@ import { Workpaper, type WorkpaperMeta } from "@/components/Workpaper";
  * and fetches detail per click. Nothing pre-computes or rewrites the packet, so
  * pointing `PACKET_PATH` at a different one is the only change needed to load it.
  */
-export default function Page() {
+export default async function Page() {
   const packet = loadPacket();
-  const graph = buildGraph(packet);
+  const clock = await getClock();
+  const graph = buildGraph(packet, clock);
   const current = graph.current;
 
   const meta: WorkpaperMeta = {
@@ -25,11 +27,11 @@ export default function Page() {
     trigger: current.trigger,
     federalBalance: current.summary.federal.balance_due,
     californiaBalance: current.summary.california.balance_due,
-    documents: packet.documents.length,
-    extractedValues: packet.extracted_values.length,
+    documents: graph.documents.length,
+    extractedValues: graph.documents.reduce((n, d) => n + (graph.evsByDoc.get(d.id)?.length ?? 0), 0),
     lines: current.lines.length,
     warnings: current.diagnostics.filter((d) => d.severity === "warning").length,
   };
 
-  return <Workpaper meta={meta} outline={buildOutline(graph)} />;
+  return <Workpaper meta={meta} outline={buildOutline(graph)} clock={clock} />;
 }

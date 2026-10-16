@@ -27,6 +27,7 @@ import type {
   VersionAsset,
 } from "../packet/types";
 import type { AnswerPayload, QuestionPayload, VerificationPayload, WorkpaperEvent } from "../events/types";
+import { visibleAt, type Clock } from "../time/clock";
 import { parseRef, resolveDotPath, resolvePointer, type ParsedRef } from "./refs";
 
 /**
@@ -42,6 +43,12 @@ const REF_ALIASES: Record<string, string> = {
 
 export interface FactGraph {
   packet: Packet;
+  /** The position this graph was built at. */
+  clock: Clock;
+  /** True when the clock sits before the engine had computed anything. */
+  beforeFirstRun: boolean;
+  /** Documents visible at that position. */
+  documents: PacketDocument[];
 
   /** The latest computed version; the README names v3 as the current return. */
   current: ReturnVersion;
@@ -84,18 +91,40 @@ function pushUnique(map: Map<string, string[]>, key: string, value: string) {
   else if (!list.includes(value)) list.push(value);
 }
 
-export function buildGraph(packet: Packet): FactGraph {
-  const versions = packet.return_versions;
-  const current = versions[versions.length - 1];
+/**
+ * Build the graph as the file stood at a moment.
+ *
+ * In replay the engine version is the last one computed by then, and a document
+ * that had not arrived is not in the index at all — along with everything read
+ * from it. That is the point: a reviewer looking at March should see the file a
+ * March reviewer saw, not today's file with later dates greyed out.
+ */
+export function buildGraph(packet: Packet, clock: Clock = { live: true }): FactGraph {
+  const versions = packet.return_versions.filter((v) => visibleAt(clock, v.computed_at));
+
+  /**
+   * Before the first run the engine had produced nothing.
+   *
+   * The first version stands in so the file is still navigable, but that is a
+   * scaffold, not the return as it was — at that moment there was no return. The
+   * flag says so, and the UI says so, rather than letting figures that did not
+   * exist yet be read as though they did.
+   */
+  const beforeFirstRun = versions.length === 0;
+  const current = versions[versions.length - 1] ?? packet.return_versions[0];
+
+  const documents = packet.documents.filter((d) => visibleAt(clock, d.received_at));
+  const available = new Set(documents.map((d) => d.id));
 
   const versionById = new Map(versions.map((v) => [v.version, v]));
-  const docById = new Map(packet.documents.map((d) => [d.id, d]));
+  const docById = new Map(documents.map((d) => [d.id, d]));
 
   const evById = new Map<string, ExtractedValue>();
   const evsByDoc = new Map<string, ExtractedValue[]>();
   const evsByDocPage = new Map<string, ExtractedValue[]>();
 
   for (const ev of packet.extracted_values) {
+    if (!available.has(ev.document_id)) continue;
     evById.set(ev.id, ev);
     push(evsByDoc, ev.document_id, ev);
     push(evsByDocPage, `${ev.document_id}#${ev.page}`, ev);
@@ -132,6 +161,9 @@ export function buildGraph(packet: Packet): FactGraph {
 
   return {
     packet,
+    clock,
+    beforeFirstRun,
+    documents,
     current,
     versions,
     versionById,

@@ -222,6 +222,40 @@ can be applied rather than retyped — and applied together, under one group id,
 undone by one action that appends compensating events rather than deleting
 anything.
 
+### Filing, and after
+
+**Replay.** The file has no single present: the timeline runs from an engagement
+letter in January 2026 to an examination letter in January 2028. So the clock is
+a position, and moving it shows the file as it stood — the version the engine had
+produced, the documents that had arrived, the work that had been recorded. At
+2026-03-10 the federal AGI reads 428,023 and 64 documents are in the file; at
+2026-03-20, 429,820 and 66; live, 445,590 and 74. Replay is **read-only**, because
+recording work against a past view would be writing history rather than replaying
+it. Before the first engine run it says so rather than showing figures that did
+not exist yet.
+
+**Freeze and amend.** Filing appends a snapshot of all 627 lines with a hash of
+them. After that an adjustment is refused until an amendment is opened; the filed
+return stays as transmitted and the amendment sits on top. Neither needed a new
+mechanism — the snapshot is an event, and "the amendment layer" is just the
+adjustments that come after it.
+
+**Answering a notice.** The 2028 Letter 566 examines two items. The record
+assembles from the file: the figure as filed, the document and page behind each
+component, the field and what was printed there, who verified it and how, what the
+client was asked and answered, who signed — **and what the firm's own checks say,
+including where they disagree with the return.** It exports as JSON and is
+readable without this system, which is what self-contained has to mean two years
+later.
+
+That last part is the one worth arguing about, and the answer is that an examiner
+will find the 1099-K double count whether or not the record mentions it. A record
+that hides it is worth less than one that explains it.
+
+**Rolling forward.** Carryovers arrive next year with the line they came out of,
+the basis records arrive with their gaps intact, and so does everything still
+open — an unanswered question does not close because the year ended.
+
 ## Simulated source documents
 
 `lib/graph/document.ts` is the seam where real documents would replace simulated

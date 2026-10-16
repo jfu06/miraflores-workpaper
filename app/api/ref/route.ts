@@ -4,6 +4,7 @@ import { buildLookup } from "@/lib/events/lookup";
 import { listAll } from "@/lib/events/store";
 import { buildGraph, resolveRef } from "@/lib/graph/graph";
 import { loadPacket } from "@/lib/packet/load";
+import { getClock } from "@/lib/time/server";
 
 /**
  * Resolve one reference.
@@ -16,6 +17,6 @@ export async function GET(request: Request) {
   if (!ref) return NextResponse.json({ error: "Missing ?ref=" }, { status: 400 });
 
   const packet = loadPacket();
-  const graph = buildGraph(packet);
+  const graph = buildGraph(packet, await getClock());
   return NextResponse.json(resolveRef(graph, ref, buildLookup(packet, listAll(10_000))));
 }

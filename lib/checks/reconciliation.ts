@@ -297,3 +297,131 @@ export const unexplainedVariance: Check = {
       }));
   },
 };
+
+/**
+ * Schedule C gross receipts against the forms third parties filed.
+ *
+ * This reconciliation exists because the IRS asks for it: Letter 566 on the 2025
+ * return examines "Schedule C gross receipts: reconcile to Forms 1099-NEC
+ * (142,000) and Form 1099-K (12,400) filed by third parties". A firm that knows
+ * an area is examined should be checking it before the letter arrives.
+ *
+ * Two legs, both computed from extracted values rather than from prose:
+ *
+ *   1. Books revenue should equal what third parties reported plus what clients
+ *      who issue no form paid. If it does, the books are complete.
+ *   2. A payment-card amount added on top of books revenue is a double count if a
+ *      books record says those card deposits are already in the books.
+ */
+export const schcGrossReceipts: Check = {
+  id: "RECON-SCHC-GROSS",
+  title: "Schedule C gross receipts do not reconcile to the third-party forms",
+  family: "reconciliation",
+  rationale:
+    "Gross receipts are matched against Forms 1099-NEC and 1099-K by the agencies automatically, and this return is already under examination on exactly that point. A figure that cannot be reconciled is one the firm will have to explain later without the working.",
+  independent:
+    "Adds the Forms 1099-NEC itself, reads the books total and the deposits detail, and reconciles them. The engine's gross receipts figure is the thing being tested, not an input.",
+  run({ graph }) {
+    const line = graph.lineByKey.get("SchC.1");
+    if (!line || typeof line.value !== "number") return [];
+
+    const findings: Finding[] = [];
+    const valueOf = (id: string) => {
+      const v = graph.evById.get(id)?.value;
+      return typeof v === "number" ? v : undefined;
+    };
+
+    /** Every Form 1099-NEC in the file, added here rather than taken from a total. */
+    const nec = graph.documents
+      .filter((d) => d.document_type === "1099-NEC")
+      .flatMap((d) => (graph.evsByDoc.get(d.id) ?? []).filter((ev) => ev.field === "box1"));
+    const necTotal = nec.reduce(
+      (sum, ev) => sum + (typeof ev.value === "number" ? ev.value : 0),
+      0,
+    );
+
+    const booksEv = (graph.evsByDoc.get("D14") ?? []).find((ev) => ev.field === "total_income");
+    const booksTotal = typeof booksEv?.value === "number" ? booksEv.value : undefined;
+
+    const detail = graph.evsByDoc.get("D15") ?? [];
+    const cardInBooks = detail.find((ev) => ev.field === "atlas_paywell");
+    const noForm = detail.find((ev) => ev.field === "unreported_small");
+
+    const card = (graph.evsByDoc.get("D21") ?? []).find((ev) => ev.field === "box1a");
+    const cardTotal = typeof card?.value === "number" ? card.value : undefined;
+
+    // Leg 1: do the books tie to what third parties reported?
+    if (booksTotal !== undefined && typeof noForm?.value === "number") {
+      const expected = necTotal + noForm.value;
+      const difference = Math.round(booksTotal - expected);
+      if (difference === 0) {
+        // The books are complete, which makes anything added on top suspect.
+      } else {
+        findings.push({
+          id: "RECON-SCHC-GROSS:books",
+          checkId: "RECON-SCHC-GROSS",
+          severity: "medium",
+          title: `Books revenue is ${money(Math.abs(difference))} ${
+            difference > 0 ? "above" : "below"
+          } the third-party forms plus unreported clients`,
+          detail: `Books revenue ${money(booksTotal)} against Forms 1099-NEC ${money(
+            necTotal,
+          )} plus ${money(noForm.value)} from clients who issued no form.`,
+          refs: ["SchC.1", booksEv!.id, noForm.id, ...nec.map((ev) => ev.id)],
+          scope: { kind: "line", id: "SchC.1" },
+          amount: Math.abs(difference),
+        });
+      }
+    }
+
+    // Leg 2: is the payment-card total added on top of revenue it is already inside?
+    if (
+      booksTotal !== undefined &&
+      cardTotal !== undefined &&
+      typeof cardInBooks?.value === "number" &&
+      cardInBooks.value === cardTotal &&
+      Math.round(line.value - booksTotal) === Math.round(cardTotal)
+    ) {
+      const rate = graph.current.tax_effect_rates.schc_profit;
+      findings.push({
+        id: "RECON-SCHC-GROSS:double-count",
+        checkId: "RECON-SCHC-GROSS",
+        severity: "high",
+        title: `Form 1099-K ${money(cardTotal)} is added to books revenue it is already inside`,
+        detail:
+          `Gross receipts ${money(line.value)} = books revenue ${money(booksTotal)} plus the whole Form 1099-K ${money(cardTotal)}. ` +
+          `Rule ${line.rule} adds card amounts "the engine could not match to a books deposit", and it matched none. ` +
+          `But the deposits detail records ${money(cardInBooks.value)} of the ${money(
+            valueOf("ev-0110") ?? 0,
+          )} Atlas Outdoor Gear paid as arriving through Paywell card processing, deposited gross and recorded in Sales. ` +
+          `Independently: Forms 1099-NEC ${money(necTotal)} plus ${money(
+            valueOf("ev-0111") ?? 0,
+          )} from clients who issued no form equals books revenue exactly, leaving nothing for the card total to be. ` +
+          `Overstated by ${money(cardTotal)}${
+            rate ? `, about ${money(cardTotal * rate.federal_per_dollar)} of federal tax` : ""
+          }.`,
+        refs: [
+          "SchC.1",
+          booksEv!.id,
+          card!.id,
+          cardInBooks.id,
+          "ev-0110",
+          "ev-0111",
+          "D15",
+          "agency:/notices/1",
+        ],
+        scope: { kind: "line", id: "SchC.1" },
+        amount: cardTotal,
+        suggestedAdjustment: {
+          lineKey: "SchC.1",
+          from: line.value,
+          to: booksTotal,
+          reason:
+            "Form 1099-K card deposits are already in books revenue; the deposits detail records them as Sales.",
+        },
+      });
+    }
+
+    return findings;
+  },
+};

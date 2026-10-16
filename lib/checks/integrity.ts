@@ -195,7 +195,7 @@ export const stateSourcing: Check = {
  */
 const DIAGNOSTIC_RETESTS: Record<string, (ctx: Parameters<Check["run"]>[0]) => Finding | null> = {
   K1_EXPECTED_NOT_RECEIVED({ graph }) {
-    const received = graph.packet.documents.filter((d) => d.document_type.startsWith("K-1"));
+    const received = graph.documents.filter((d) => d.document_type.startsWith("K-1"));
     const ridgeline = received.filter((d) => /ridgeline/i.test(d.title) || /ridgeline/i.test(d.issuer));
     if (ridgeline.length === 0) return null;
 

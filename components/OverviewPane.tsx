@@ -8,6 +8,9 @@ import { appendEvent } from "@/lib/view/client";
 import { formatMoney, formatValue } from "@/lib/view/format";
 import { OpenItems, type ChecksData } from "./OpenItems";
 import { Adjustments, type AdjustedData } from "./Adjustments";
+import { Season, type SeasonData } from "./Season";
+import { After } from "./After";
+import type { FilingState } from "@/lib/filing/state";
 import { Chip, Empty, PaneHeader, Section } from "./ui";
 
 export interface Overview {
@@ -17,7 +20,7 @@ export interface Overview {
   explanations: { key: string; text: string; actorName: string; at: string }[];
 }
 
-type Tab = "summary" | "areas" | "variances" | "open" | "adjustments";
+type Tab = "summary" | "areas" | "variances" | "open" | "adjustments" | "timeline" | "after";
 
 /**
  * What a reviewer sees on opening the file.
@@ -30,6 +33,9 @@ export function OverviewPane({
   data,
   checks,
   adjusted,
+  season,
+  filing,
+  onClockMoved,
   onSelect,
   onOpenRef,
   onChanged,
@@ -37,6 +43,9 @@ export function OverviewPane({
   data: Overview | null;
   checks: ChecksData | null;
   adjusted: AdjustedData | null;
+  season: SeasonData | null;
+  filing: FilingState | null;
+  onClockMoved: () => void;
   onSelect: (key: string) => void;
   onOpenRef: (ref: string) => void;
   onChanged: () => void;
@@ -71,7 +80,7 @@ export function OverviewPane({
         title="This return, against last year"
         right={
           <div className="flex rounded border border-edge p-0.5">
-            {(["summary", "areas", "variances", "open", "adjustments"] as Tab[]).map((t) => (
+            {(["summary", "areas", "variances", "open", "adjustments", "timeline", "after"] as Tab[]).map((t) => (
               <button
                 key={t}
                 onClick={() => setTab(t)}
@@ -85,7 +94,9 @@ export function OverviewPane({
                     ? `Open items ${openCount}`
                     : t === "adjustments"
                       ? `Adjustments${adjustedCount ? ` ${adjustedCount}` : ""}`
-                      : t}
+                      : t === "after"
+                        ? "After filing"
+                        : t}
               </button>
             ))}
           </div>
@@ -226,6 +237,18 @@ export function OverviewPane({
             </p>
           </Section>
         )}
+
+        {tab === "timeline" && (
+          <Season
+            data={season}
+            filing={filing}
+            onChanged={onChanged}
+            onClockMoved={onClockMoved}
+            onOpenRef={onOpenRef}
+          />
+        )}
+
+        {tab === "after" && <After onSelect={onSelect} onOpenRef={onOpenRef} />}
 
         {tab === "adjustments" && (
           <Adjustments data={adjusted} onSelect={onSelect} onChanged={onChanged} />

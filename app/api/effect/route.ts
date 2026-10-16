@@ -4,6 +4,7 @@ import { computeEffect, defaultCategory, requiresPartnerSignoff, type EffectCate
 import { buildFormIndex, recompute } from "@/lib/adjust/recompute";
 import { buildGraph } from "@/lib/graph/graph";
 import { loadPacket } from "@/lib/packet/load";
+import { getClock } from "@/lib/time/server";
 
 /**
  * Preview an adjustment before it is made: what it would be estimated at, and
@@ -19,7 +20,7 @@ export async function GET(request: Request) {
   const to = Number(params.get("to"));
   const chosen = params.get("category") as EffectCategory | null;
 
-  const graph = buildGraph(loadPacket());
+  const graph = buildGraph(loadPacket(), await getClock());
   const line = lineKey ? graph.lineByKey.get(lineKey) : undefined;
 
   if (!line || typeof line.value !== "number") {

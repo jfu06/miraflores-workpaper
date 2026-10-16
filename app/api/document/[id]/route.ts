@@ -3,6 +3,7 @@ import { NextResponse } from "next/server";
 import { getActor } from "@/lib/auth/actor";
 import { buildGraph } from "@/lib/graph/graph";
 import { loadPacket } from "@/lib/packet/load";
+import { getClock } from "@/lib/time/server";
 import { buildDocumentDetail } from "@/lib/view/models";
 
 /**
@@ -13,7 +14,7 @@ import { buildDocumentDetail } from "@/lib/view/models";
 export async function GET(_request: Request, context: { params: Promise<{ id: string }> }) {
   const { id } = await context.params;
   const packet = loadPacket();
-  const graph = buildGraph(packet);
+  const graph = buildGraph(packet, await getClock());
   const actor = await getActor(packet);
   const detail = buildDocumentDetail(graph, decodeURIComponent(id), actor);
 
