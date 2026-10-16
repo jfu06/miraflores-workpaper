@@ -1,17 +1,42 @@
-# Findings
+# The errors found, and how the design surfaced them
 
-**These are check output, not a list kept by hand.** Fifteen checks run against
-the packet; `npm run checks` prints what they find, and the Open items tab shows
-the same thing in the app. The write-ups below are the ones worth reading in
-prose — each names the check that produced it, so the claim can be re-run rather
-than taken on trust.
+**These are check output, not a list kept by hand.** Eighteen checks run against
+the packet; `npm run checks` prints what they find and the Open items tab shows
+the same thing. Every claim below can be re-run.
 
-Version v3 of the return carries 11 engine diagnostics of its own. Those are an
-input, not a verdict: one check re-tests the condition each one asserts, and the
-findings marked **[not in diagnostics]** are ones the engine does not report.
+The engine's own v3 diagnostics are an input, not a verdict — one check re-tests
+the condition each asserts. **All nine write-ups below are things the engine does
+not report.**
+
+## Summary
+
+| | Finding | Amount | What the amount is | Surfaced by |
+|---|---|---|---|---|
+| F-008 | Form 1099-K added to books revenue it is already inside | **12,400** | overstated gross receipts, ≈ **4,402** federal tax | `RECON-SCHC-GROSS` |
+| F-009 | Donated car deducted at the client's estimate, not the charity's sale proceeds | **3,100** | overstated deduction | `RECON-NONCASH-GIFT` |
+| F-002 | All wages sourced to California despite 195 days' residency | **218,400** | sourced whole; apportioning suggests ≈ 89,000 overstated, ≈ **5,600** California tax | `INT-STATE-SOURCE` |
+| F-005 | Both estimated payment figures disagree with the agencies | **1,000** + **3,500** | overstated payments; balance moves one for one | `RECON-AGENCY` |
+| F-006 | Three pages print amounts never extracted | **250** traced | one unread lot explains a tie-out difference exactly | `DOC-PAGE-UNREAD` |
+| F-003 | 2025 foreign interest converted at the 2024 exchange rate | **124** | understated interest, ≈ 43 federal tax | `INT-PARAM-YEAR` |
+| F-007 | Five Schedule CA lines declare inputs that cannot produce their value | — | the derivation shown is incomplete | `INT-INPUTS-INCOMPLETE` |
+| F-004 | Schedule B line numbers are positions, not identities | — | would have produced 3 false variances | `RECON-VARIANCE` |
+| F-001 | The prior depreciation schedule has no source | — | all opening depreciation is untraceable | `INT-REF` |
+
+**There is deliberately no total.** One of those amounts is gross income sourced
+to a state, another is a payment an agency has not posted, another is a deduction.
+Adding them produces a figure that looks like exposure and is not — the same
+false precision the workpaper exists to remove. The app does not total them
+either.
+
+**Both items the IRS is examining** in the 2028 Letter 566 have findings: F-008
+on Schedule C gross receipts, which is the largest error in the file, and F-009
+on the noncash charitable deduction. Neither was written by hand — the checks
+found them, and one of those checks exists *because* the letter says to look.
+
+## The suite
 
 ```
-17 checks, 107 findings — 16 high, 57 medium, 34 low
+18 checks, 108 findings — 17 high, 57 medium, 34 low
 
 EV-NOT-ON-PAGE             1   Extracted amount does not appear on its own page
 EV-LOW-CONFIDENCE          2   Low-confidence reading used on the return
@@ -20,6 +45,8 @@ DOC-SUPERSEDED-USED        0   A superseded document still feeds the return
 TIE-OUT-DETAIL             2   Transaction detail does not add to the summary
 DOC-PAGE-UNREAD            4   A document page was never read
 RECON-AGENCY               2   Payments do not agree to the agency's records
+RECON-SCHC-GROSS           1   Gross receipts do not reconcile to third-party forms
+RECON-NONCASH-GIFT         1   A noncash gift is valued above its own acknowledgment
 RECON-QUESTIONNAIRE        1   A client answer is contradicted by the file
 RECON-CLIENT-HEDGED        3   A figure rests on a client's uncertain recollection
 RECON-VARIANCE            78   A flagged prior-year variance is unexplained
@@ -29,14 +56,26 @@ INT-STATE-SOURCE           2   All of an item sourced to CA despite part-year re
 INT-STALE-DIAGNOSTIC       0   An engine diagnostic is no longer true
 INT-BASIS-GAP              2   A basis record has a missing year
 INT-INPUTS-INCOMPLETE      5   A line's declared inputs cannot produce its value
-RECON-SCHC-GROSS           1   Gross receipts do not reconcile to third-party forms
 ```
 
+Each check states what it establishes **without trusting the engine**, and the app
+shows that sentence beside every finding, so "we checked this" is inspectable
+rather than asserted.
+
 Two checks reporting nothing is also a result. `DOC-SUPERSEDED-USED` is clean
-because the corrected Meridian 1099 really did displace the original, and
-`INT-STALE-DIAGNOSTIC` is clean because v3 dropped the two diagnostics that v1
-and v2 carried once the late K-1s arrived. A suite that can only ever find things
-is not a suite.
+because the corrected Meridian 1099 really did displace the original.
+`INT-STALE-DIAGNOSTIC` is clean because v3 dropped the two diagnostics v1 and v2
+carried once the late K-1s arrived. A suite that can only ever find things is not
+a suite.
+
+## How a finding closes
+
+Two ways, and the difference is kept. **Dismissed** means someone argued it away,
+with a reason and an author; the check still runs. **Addressed** means the figure
+was changed to what the other record holds. Checks never read the event log, so a
+finding cannot be made to disappear by working around it — but applying the exact
+figure a check supplied is answering it, not working around it, and the required
+step it feeds then ticks itself.
 
 ---
 
@@ -388,5 +427,36 @@ and does not cite the record that says the one contains the other.
 walkthrough, it goes through the amendment layer: the filed return stays as
 transmitted, the amendment sits on top, and the change needs partner approval at
 4,402 of effect.
+
+---
+
+## F-009 — The donated car is deducted at the client's estimate, not the charity's sale proceeds **[not in diagnostics]**
+
+**Check:** `RECON-NONCASH-GIFT`. Reads the amounts extracted from each
+acknowledgment a Form 8283 line cites and compares them to the deduction taken.
+
+```
+F8283.A1.vehicle   6,000   sources: qa-39, ev-1055 (the date on D66)
+D66  Form 1098-C   box 4a  vehicle sold in arm's length transaction, checked
+                   box 4c  gross proceeds from sale   2,900.00   (ev-1054, confidence 0.99)
+```
+
+`R-NONCASH-GIFT` takes the value "stated by the donor **or** the acknowledgment".
+It took the donor's — `qa-39`, "Kelley Blue Book said **about** 6,000" — and
+cited the date on the Form 1098-C while leaving the proceeds on the same document
+unused. Overstated by **3,100**.
+
+**Why the design found it:** two checks converge again, from different
+directions. `RECON-CLIENT-HEDGED` had already flagged this line for resting on a
+hedged recollection — the word "about" is in the answer. This check asks the
+narrower question: is there an amount sitting *on a document the line already
+cites* that nothing read? There was, at 0.99 confidence.
+
+**Why it matters more than 3,100:** this is the first item Letter 566 examines —
+"provide acknowledgments and valuation". The acknowledgment is the document the
+IRS will ask for, and it contradicts the return.
+
+**Disposition:** adjust to 2,900, or document the basis for a different figure.
+The check carries the exact figure, so it can be applied rather than retyped.
 
 ---

@@ -425,3 +425,88 @@ export const schcGrossReceipts: Check = {
     return findings;
   },
 };
+
+/**
+ * A noncash gift valued above what its own acknowledgment states.
+ *
+ * `R-NONCASH-GIFT` takes the value "stated by the donor **or** the
+ * acknowledgment". When those two disagree the choice is a judgment, and which
+ * one was taken should be visible — particularly here, where Letter 566 asks the
+ * firm for exactly this: "provide acknowledgments and valuation".
+ *
+ * The test is narrow on purpose. It only fires when the line rests on a client
+ * answer **and** an amount sits unused on the acknowledgment the line already
+ * cites. That is not a disagreement about valuation method; it is a figure in the
+ * file that nothing read.
+ */
+export const noncashGiftValuation: Check = {
+  id: "RECON-NONCASH-GIFT",
+  title: "A noncash gift is valued above its own acknowledgment",
+  family: "reconciliation",
+  rationale:
+    "The acknowledgment is the document the agency will ask for, and where a vehicle was sold by the charity it reports the proceeds. A deduction taken at the donor's estimate instead is the difference the examiner will compute.",
+  independent:
+    "Reads the amounts extracted from each acknowledgment the line cites and compares them to the deduction taken. The engine's choice between donor and acknowledgment is the thing being tested.",
+  run({ graph }) {
+    const findings: Finding[] = [];
+
+    for (const line of graph.current.lines) {
+      if (line.form !== "F8283" || typeof line.value !== "number") continue;
+
+      const citesClient = line.sources.some((ref) => ref.startsWith("qa-"));
+      if (!citesClient) continue;
+
+      /** Documents this line already points at, through any of its sources. */
+      const documents = new Set(
+        line.sources
+          .filter((ref) => ref.startsWith("ev-"))
+          .map((ref) => graph.evById.get(ref)?.document_id)
+          .filter((id): id is string => Boolean(id)),
+      );
+
+      for (const docId of documents) {
+        const stated = (graph.evsByDoc.get(docId) ?? []).filter(
+          (ev) =>
+            typeof ev.value === "number" &&
+            ev.value > 0 &&
+            ev.value !== line.value &&
+            !line.sources.includes(ev.id),
+        );
+        if (stated.length === 0) continue;
+
+        const doc = graph.docById.get(docId);
+        const answer = line.sources.find((ref) => ref.startsWith("qa-"));
+        const qa = answer ? graph.qaById.get(answer) : undefined;
+
+        for (const ev of stated) {
+          const difference = line.value - (ev.value as number);
+          findings.push({
+            id: `RECON-NONCASH-GIFT:${line.key}:${ev.id}`,
+            checkId: "RECON-NONCASH-GIFT",
+            severity: "high",
+            title: `${line.label.split("(")[0].trim()}: deducted at ${money(
+              line.value,
+            )} while ${docId} states ${money(ev.value as number)}`,
+            detail:
+              `Rule ${line.rule} takes the value "stated by the donor or the acknowledgment", and took the donor's. ` +
+              `The deduction cites ${answer}${qa ? ` — "${qa.answer}"` : ""} and the date on ${docId}, but not ${
+                ev.id
+              }, the ${ev.label || ev.field} of ${money(ev.value as number)} on the same document. ` +
+              `${doc?.title ?? docId}. Difference ${money(difference)}.`,
+            refs: [line.key, ev.id, docId, ...(answer ? [answer] : []), "agency:/notices/1"],
+            scope: { kind: "line", id: line.key },
+            amount: Math.abs(difference),
+            suggestedAdjustment: {
+              lineKey: line.key,
+              from: line.value,
+              to: ev.value as number,
+              reason: `Valued at the amount stated on the acknowledgment ${docId} (${ev.field}).`,
+            },
+          });
+        }
+      }
+    }
+
+    return findings;
+  },
+};

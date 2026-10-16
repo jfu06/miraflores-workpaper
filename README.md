@@ -1,16 +1,32 @@
 # Workpaper — Okafor-Lindqvist 2025
 
-A web-native tax workpaper built from the Miraflores packet. Evidence tracing and
-the review layer, end to end, through the real data.
+A web-native tax workpaper built from the Miraflores packet.
 
 ```bash
 npm install
-npm run dev     # http://localhost:3000
+npm run dev        # http://localhost:3000
+npm run checks     # 18 checks, 108 findings
+npm run verify     # every claim in this repo, re-run
 ```
 
 The packet in `data/` is a byte-identical copy of the one delivered
 (`sha256 ee01f850…`). Nothing pre-compiles or rewrites it; `PACKET_PATH` points
 the app at a different one without a code change.
+
+## What to read
+
+| | |
+|---|---|
+| **[CORE-IDEA.md](CORE-IDEA.md)** | One page: the core idea and the data model |
+| **[FINDINGS.md](FINDINGS.md)** | The errors found, and how the design surfaced them |
+| **[VIDEO.md](VIDEO.md)** | Walkthrough outline |
+
+Nine errors are written up, all of them things the engine's own diagnostics do
+not report, and **both items the IRS is examining in the 2028 letter have
+findings**. None was written by hand — the checks found them, and one of those
+checks exists because the letter says to look.
+
+The rest of this file is the detail behind the one-pager.
 
 ## The core idea
 
@@ -51,7 +67,7 @@ Verified against the data, not assumed:
 - `scripts/check-refs.ts` — all **8,691** references the packet uses parse.
 - `scripts/check-integrity.ts` — all **2,749** reference sites in the current
   return resolve, 6 of them through a documented alias (see F-001).
-- `scripts/check-locate.ts` — **98.6%** of the 3,012 extracted values can be
+- `scripts/check-locate.ts` — **98.4%** of the 3,012 extracted values can be
   located on their own printed page.
 
 **Event layer** (`lib/events/`) — append-only, in SQLite via Node's built-in
@@ -130,12 +146,12 @@ disclosures rather than page loads.
 
 ### Checks that do not trust the engine
 
-Fifteen checks run against the packet. Each declares what it recomputes or
+Eighteen checks run against the packet. Each declares what it recomputes or
 cross-reads for itself, and the app shows that sentence next to every finding, so
 "we checked this" is a claim a reviewer can inspect rather than take on faith.
 
 ```bash
-npm run checks     # 15 checks, 101 findings — 15 high, 52 medium, 34 low
+npm run checks     # 18 checks, 108 findings — 17 high, 57 medium, 34 low
 ```
 
 They never read the event log. A finding cannot be made to disappear by doing
@@ -274,11 +290,11 @@ the page at all — which, for the handwritten St. Brigid receipt, is the findin
 
 | strategy | share |
 |---|---|
-| verbatim reading | 70.0% |
+| verbatim reading | 66.5% |
 | normalized value (mostly ISO vs US dates) | 23.6% |
-| numeric amount | 4.2% |
-| field label only | 0.7% |
-| not located | 1.4% |
+| numeric amount | 7.4% |
+| field label only | 0.8% |
+| not located | 1.6% |
 
 ## What works now
 
