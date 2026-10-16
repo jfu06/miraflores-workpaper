@@ -4,7 +4,7 @@ import { useEffect, useRef, useState } from "react";
 
 import type { DocumentDetail, PageValue } from "@/lib/view/models";
 import type { ResolvedRef } from "@/lib/graph/graph";
-import { fetchDocument } from "@/lib/view/client";
+import { fetchDocument, revealValue } from "@/lib/view/client";
 import { formatValue } from "@/lib/view/format";
 import { Chip, Empty, LOCATE_METHOD, PaneHeader, Section } from "./ui";
 
@@ -261,6 +261,17 @@ function ValueRow({
 }) {
   const method = LOCATE_METHOD[value.method];
   const lowConfidence = value.confidence < 0.8;
+  const [revealed, setRevealed] = useState<string | null>(null);
+  const [denied, setDenied] = useState<string | null>(null);
+
+  const reveal = async () => {
+    try {
+      setRevealed(await revealValue(value.evId));
+      setDenied(null);
+    } catch (e) {
+      setDenied((e as Error).message);
+    }
+  };
 
   return (
     <div className={emphasize ? "rounded border border-[#f0e0bd] bg-warn-soft px-2 py-2" : ""}>
@@ -269,7 +280,9 @@ function ValueRow({
         <span className="min-w-0 flex-1 truncate text-[12px] font-medium" title={value.label}>
           {value.label || value.field}
         </span>
-        <span className="tnum shrink-0 text-[12px]">{formatValue(value.value)}</span>
+        <span className="tnum shrink-0 text-[12px]">
+          {revealed ?? formatValue(value.value)}
+        </span>
       </div>
       <div className="mt-0.5 flex flex-wrap items-center gap-1.5 pl-1">
         <span className="font-mono text-[10px] text-muted">{value.field}</span>
@@ -282,6 +295,24 @@ function ValueRow({
         {value.textAsRead && value.textAsRead !== String(value.value) && (
           <span className="text-[10px] text-muted">read &ldquo;{value.textAsRead}&rdquo;</span>
         )}
+        {value.masked && !revealed && (
+          <button
+            onClick={reveal}
+            disabled={!value.revealable}
+            title={
+              value.revealable
+                ? "Reveal this value. The disclosure is written to the view log."
+                : "This role does not have sensitive-data clearance."
+            }
+            className="transition hover:brightness-95 disabled:cursor-not-allowed"
+          >
+            <Chip tone={value.revealable ? "warn" : "quiet"}>
+              {value.revealable ? "reveal" : "masked"}
+            </Chip>
+          </button>
+        )}
+        {revealed && <Chip tone="warn" title="This disclosure is in the view log">logged</Chip>}
+        {denied && <span className="text-[10px] text-bad">{denied}</span>}
         {value.landedOn.length > 0 ? (
           value.landedOn.map((key) => (
             <button key={key} onClick={() => onSelect(key)} className="transition hover:brightness-95">

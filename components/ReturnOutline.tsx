@@ -2,6 +2,7 @@
 
 import { useMemo, useState } from "react";
 
+import type { ScopeSummary } from "@/lib/events/summary";
 import type { Jurisdiction } from "@/lib/packet/types";
 import type { OutlineGroup, OutlineLine } from "@/lib/view/models";
 import { areaLabel } from "@/lib/view/areas";
@@ -12,6 +13,8 @@ interface Props {
   outline: OutlineGroup[];
   selectedKey: string | null;
   onSelect: (key: string) => void;
+  /** Work done per scope, keyed `line:<key>`, for the status markers. */
+  summaries: Record<string, ScopeSummary>;
 }
 
 /**
@@ -21,7 +24,7 @@ interface Props {
  * reviewer works in: the firm budgets hours by area, and a form belongs to one.
  * Lines keep the engine's own order inside a form.
  */
-export function ReturnOutline({ outline, selectedKey, onSelect }: Props) {
+export function ReturnOutline({ outline, selectedKey, onSelect, summaries }: Props) {
   const [jurisdiction, setJurisdiction] = useState<Jurisdiction>("federal");
   const [query, setQuery] = useState("");
 
@@ -101,6 +104,7 @@ export function ReturnOutline({ outline, selectedKey, onSelect }: Props) {
                 <ul>
                   {lines.map((line) => {
                     const active = line.key === selectedKey;
+                    const work = summaries[`line:${line.key}`];
                     return (
                       <li key={line.key}>
                         <button
@@ -125,6 +129,28 @@ export function ReturnOutline({ outline, selectedKey, onSelect }: Props) {
                               title="The engine left a note on this line"
                             />
                           )}
+                          {work?.openBlocking ? (
+                            <span
+                              className="shrink-0 text-[10px] font-semibold text-bad"
+                              title={`${work.openBlocking} open blocking review note`}
+                            >
+                              !
+                            </span>
+                          ) : work?.signoffLevels.length ? (
+                            <span
+                              className="shrink-0 text-[10px] text-accent"
+                              title={`Signed: ${work.signoffLevels.join(", ")}`}
+                            >
+                              {"\u2713".repeat(work.signoffLevels.length)}
+                            </span>
+                          ) : work?.verifications ? (
+                            <span
+                              className="shrink-0 text-[10px] text-muted"
+                              title={`${work.verifications} verification`}
+                            >
+                              \u00b7
+                            </span>
+                          ) : null}
                           {line.sourceCount > 0 && (
                             <span className="shrink-0 text-[9px] text-muted" title={`${line.sourceCount} source references`}>
                               {line.sourceCount}

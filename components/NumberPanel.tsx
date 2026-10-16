@@ -8,12 +8,14 @@ import { areaLabel } from "@/lib/view/areas";
 import { formatValue } from "@/lib/view/format";
 import { REF_KIND_LABEL } from "@/lib/graph/refs";
 import { TraceNode } from "./TraceTree";
+import { WorkPanel } from "./WorkPanel";
 import { Chip, Empty, PaneHeader, Section } from "./ui";
 
 interface Props {
   lineKey: string | null;
   onSelect: (key: string) => void;
   onOpenSource: (ref: string) => void;
+  onWorkChanged: () => void;
 }
 
 /**
@@ -23,7 +25,7 @@ interface Props {
  * it, what rule produced it, what was it built from, what evidence sits under it,
  * what does it feed, and has the engine said anything about it.
  */
-export function NumberPanel({ lineKey, onSelect, onOpenSource }: Props) {
+export function NumberPanel({ lineKey, onSelect, onOpenSource, onWorkChanged }: Props) {
   const [detail, setDetail] = useState<LineDetail | null>(null);
   const [error, setError] = useState<string | null>(null);
 
@@ -200,6 +202,8 @@ export function NumberPanel({ lineKey, onSelect, onOpenSource }: Props) {
             </ul>
           </Section>
         )}
+
+        <WorkPanel scope={{ kind: "line", id: detail.key }} onChanged={onWorkChanged} />
 
         <div className="h-16" />
       </div>

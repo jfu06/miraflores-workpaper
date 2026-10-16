@@ -1,7 +1,7 @@
 # Workpaper — Okafor-Lindqvist 2025
 
-A web-native tax workpaper built from the Miraflores packet. This is the Day 1
-vertical slice: evidence tracing, end to end, through the real data.
+A web-native tax workpaper built from the Miraflores packet. Evidence tracing and
+the review layer, end to end, through the real data.
 
 ```bash
 npm install
@@ -25,6 +25,9 @@ it. They would not build a grid. This slice is the fact layer and the first view
 of it; the event layer is next.
 
 ## Data model
+
+The fact layer is read-only and indexed from the packet. The event layer is the
+only thing that ever changes, and it only ever grows.
 
 **Fact graph** (`lib/graph/`) — read-only, indexed from the packet at startup.
 
@@ -50,6 +53,53 @@ Verified against the data, not assumed:
   return resolve, 6 of them through a documented alias (see F-001).
 - `scripts/check-locate.ts` — **98.6%** of the 3,012 extracted values can be
   located on their own printed page.
+
+**Event layer** (`lib/events/`) — append-only, in SQLite via Node's built-in
+`node:sqlite`, so the store adds no dependency.
+
+Append-only is enforced by the database, not by convention: triggers abort any
+UPDATE or DELETE on the events table. Undo is therefore not a delete — reverting
+appends a `revert` event naming what it withdraws, and the fold ignores both. The
+withdrawn entry stays on the record, which is the point when an examiner reads
+this in 2028.
+
+That one decision covers four requirements without a mechanism each: keep the
+original when something is adjusted, show what changed since you last looked, undo
+in bulk, and freeze at filing with amendments on top.
+
+### Sign-offs that reopen
+
+A sign-off stores a **hash of what it covered**: the line's value and rule, every
+line it is built from transitively, the extracted values underneath, and the
+verifications and review notes standing at the time. Nothing has to be told that a
+change happened — if the recomputed hash differs, the signature has reopened.
+A change nobody anticipated still invalidates it, because the mechanism does not
+depend on anticipating it.
+
+The covered facts are stored, not only hashed, so a reopened sign-off names the
+lines and values that moved rather than only reporting that something did.
+
+One judgment is worth stating: facts are hashed transitively, work is not. A
+sign-off attests to this number and the work done on it. If a verification is
+withdrawn two lines upstream but no number moves, what was signed is still true;
+if a number does move, the fact half catches it.
+
+### Roles, masking and the view log
+
+The acting role lives in a server-side cookie, not in the browser. That is what
+makes the rest real: a role switcher that only hides values in the UI has still
+shipped them, and anyone can read them.
+
+`firm.starter_standards` is enforced rather than displayed. A preparer cannot also
+sign as reviewer; reviewer sign-off requires preparer sign-off first; an open
+blocking review note stops any sign-off; withdrawing someone else's entry is a
+reviewer action.
+
+Sensitive values are masked **for everyone** by default — in the value list and in
+the rendered page text, since a highlighted span holds the same digits the field
+does. Revealing one is a separate request that checks clearance and appends a
+`sensitive_view` event before returning the value, so the log records actual
+disclosures rather than page loads.
 
 ## Simulated source documents
 
@@ -84,11 +134,19 @@ diagnostic citing it. Clicking a source opens the document, rendered as a docume
 with that field highlighted in place — and lists everything else read from the page
 and where each value landed.
 
+Below that, the work on the line: record a verification against one of the firm's
+five types, raise a review note that blocks filing, resolve or withdraw either, and
+sign off at preparer, reviewer or partner level. Raise a blocking note on a signed
+line and both signatures reopen in place, saying what changed. Withdraw the note
+and they come back, because the hash returns to what it was — while all five events
+stay in the history, two of them struck through.
+
+Switch to Marcus Bell, who has no clearance, and the SSNs mask in the page itself.
+
 ## Not built yet
 
-The event layer and everything resting on it: verifications, review notes,
-sign-offs that reopen on change, adjustments and tax effect, roles and masking,
-the check suite, timeline replay, filing and amendment. See the plan.
+Adjustments and tax effect, the check suite, bulk actions, timeline replay, filing,
+amendment and the client-facing views. See the plan.
 
 ## Findings
 

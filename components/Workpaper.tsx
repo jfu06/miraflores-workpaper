@@ -1,13 +1,15 @@
 "use client";
 
-import { useCallback, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 
+import type { ScopeSummary } from "@/lib/events/summary";
 import type { ResolvedRef } from "@/lib/graph/graph";
 import type { OutlineGroup } from "@/lib/view/models";
 import { formatMoney } from "@/lib/view/format";
 import { EvidencePane, type DocRequest } from "./EvidencePane";
 import { NumberPanel } from "./NumberPanel";
 import { ReturnOutline } from "./ReturnOutline";
+import { RoleSwitcher } from "./RoleSwitcher";
 import { Chip } from "./ui";
 
 export interface WorkpaperMeta {
@@ -34,6 +36,29 @@ export function Workpaper({ meta, outline }: Props) {
   const [selectedKey, setSelectedKey] = useState<string | null>(null);
   const [docRequest, setDocRequest] = useState<DocRequest | null>(null);
   const [record, setRecord] = useState<ResolvedRef | null>(null);
+  const [summaries, setSummaries] = useState<Record<string, ScopeSummary>>({});
+
+  /**
+   * Bumped whenever the acting role changes, to force the detail panes to refetch.
+   * Masking is applied server-side per actor, so a pane holding another person's
+   * response has to be thrown away rather than reinterpreted.
+   */
+  const [revision, setRevision] = useState(0);
+
+  const refreshWork = useCallback(() => {
+    setRevision((r) => r + 1);
+    fetch("/api/summary")
+      .then((r) => r.json())
+      .then((d: { summaries: Record<string, ScopeSummary> }) => setSummaries(d.summaries))
+      .catch(() => undefined);
+  }, []);
+
+  useEffect(() => {
+    fetch("/api/summary")
+      .then((r) => r.json())
+      .then((d: { summaries: Record<string, ScopeSummary> }) => setSummaries(d.summaries))
+      .catch(() => undefined);
+  }, []);
 
   /**
    * One entry point for every reference click in the app.
@@ -82,6 +107,7 @@ export function Workpaper({ meta, outline }: Props) {
         </div>
 
         <div className="ml-auto flex items-center gap-4 text-[11px]">
+          <RoleSwitcher onSwitched={refreshWork} />
           <Balance label="Federal" amount={meta.federalBalance} />
           <Balance label="California" amount={meta.californiaBalance} />
           <div className="flex items-center gap-1.5 border-l border-edge pl-4">
@@ -103,13 +129,29 @@ export function Workpaper({ meta, outline }: Props) {
 
       <main className="grid min-h-0 flex-1 grid-cols-[minmax(300px,340px)_minmax(0,1fr)_minmax(0,1.15fr)] divide-x divide-edge">
         <div className="min-h-0 bg-surface">
-          <ReturnOutline outline={outline} selectedKey={selectedKey} onSelect={selectLine} />
+          <ReturnOutline
+            outline={outline}
+            selectedKey={selectedKey}
+            onSelect={selectLine}
+            summaries={summaries}
+          />
         </div>
         <div className="min-h-0 bg-surface">
-          <NumberPanel lineKey={selectedKey} onSelect={selectLine} onOpenSource={openSource} />
+          <NumberPanel
+            key={`line-${revision}`}
+            lineKey={selectedKey}
+            onSelect={selectLine}
+            onOpenSource={openSource}
+            onWorkChanged={refreshWork}
+          />
         </div>
         <div className="min-h-0 bg-surface">
-          <EvidencePane request={docRequest} record={record} onSelect={selectLine} />
+          <EvidencePane
+            key={`doc-${revision}`}
+            request={docRequest}
+            record={record}
+            onSelect={selectLine}
+          />
         </div>
       </main>
     </div>

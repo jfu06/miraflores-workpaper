@@ -11,6 +11,8 @@
 import type { Jurisdiction, PacketDocument, ReturnLine } from "../packet/types";
 import { locatePage, segmentPage, type LocateMethod, type Segment } from "../graph/document";
 import { resolveRef, type FactGraph, type ResolvedRef } from "../graph/graph";
+import { applyMask, isSensitive, maskValue } from "../auth/mask";
+import type { ActorInfo } from "../events/derive";
 import { areaForForm } from "./areas";
 
 export interface OutlineLine {
@@ -165,6 +167,10 @@ export interface PageValue {
   method: LocateMethod;
   /** Line keys in the current return that cite this value. */
   landedOn: string[];
+  /** True when the value shown has been masked for this actor. */
+  masked: boolean;
+  /** True when this actor's clearance would let them reveal it. */
+  revealable: boolean;
 }
 
 export interface DocumentPageView {
@@ -195,7 +201,22 @@ export interface DocumentDetail {
   usedIn: string[];
 }
 
-export function buildDocumentDetail(graph: FactGraph, id: string): DocumentDetail | null {
+/**
+ * A social security number printed on a page that the pipeline did not extract
+ * would otherwise reach the browser inside the page text, with nothing to mask it.
+ * Highlighted spans are masked through their extracted value; this covers the rest.
+ */
+const SSN_IN_TEXT = /\b\d{3}-\d{2}-\d{4}\b/g;
+
+function maskPlainText(text: string): string {
+  return text.replace(SSN_IN_TEXT, (match) => maskValue(match));
+}
+
+export function buildDocumentDetail(
+  graph: FactGraph,
+  id: string,
+  actor: ActorInfo,
+): DocumentDetail | null {
   const doc = graph.docById.get(id);
   if (!doc) return null;
 
@@ -206,27 +227,45 @@ export function buildDocumentDetail(graph: FactGraph, id: string): DocumentDetai
     const values = graph.evsByDocPage.get(`${doc.id}#${page.page}`) ?? [];
     if (values.length === 0) {
       pagesWithoutValues.push(page.page);
-      pages.push({ page: page.page, segments: [{ text: page.printed_content }], values: [] });
+      pages.push({
+        page: page.page,
+        segments: [{ text: maskPlainText(page.printed_content) }],
+        values: [],
+      });
       continue;
     }
 
     const located = locatePage(page.printed_content, values);
     const methodById = new Map(located.map((l) => [l.evId, l.method]));
+    const sensitiveEvIds = new Set(
+      values.filter((ev) => isSensitive(ev.value_type, ev.field)).map((ev) => ev.id),
+    );
 
     pages.push({
       page: page.page,
-      segments: segmentPage(page.printed_content, located),
-      values: values.map((ev) => ({
-        evId: ev.id,
-        field: ev.field,
-        label: ev.label,
-        value: ev.value,
-        valueType: ev.value_type,
-        textAsRead: ev.text_as_read,
-        confidence: ev.confidence,
-        method: methodById.get(ev.id) ?? "none",
-        landedOn: graph.linesByEv.get(ev.id) ?? [],
-      })),
+      // Masking reaches the page text, not only the value list: a highlighted
+      // span holds the same digits the field does.
+      segments: segmentPage(page.printed_content, located).map((segment) =>
+        segment.evId && sensitiveEvIds.has(segment.evId)
+          ? { ...segment, text: maskValue(segment.text) }
+          : { ...segment, text: maskPlainText(segment.text) },
+      ),
+      values: values.map((ev) => {
+        const masked = applyMask(ev.value, ev.value_type, ev.field, actor);
+        return {
+          evId: ev.id,
+          field: ev.field,
+          label: ev.label,
+          value: masked.value,
+          valueType: ev.value_type,
+          textAsRead: masked.masked ? maskValue(ev.text_as_read) : ev.text_as_read,
+          confidence: ev.confidence,
+          method: methodById.get(ev.id) ?? "none",
+          landedOn: graph.linesByEv.get(ev.id) ?? [],
+          masked: masked.masked,
+          revealable: masked.revealable,
+        };
+      }),
     });
   }
 
