@@ -1,0 +1,6 @@
+node_modules
+.next
+.tscheck
+.git
+data/events.db*
+*.md
