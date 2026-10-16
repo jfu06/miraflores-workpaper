@@ -95,3 +95,68 @@ split" as its example use, which suggests this is a scenario the packet intends
 to be found.
 
 ---
+
+## F-003 — 2025 foreign interest converted at the 2024 exchange rate **[not in diagnostics]**
+
+**Surfaced by:** the prior-year comparison put every Schedule B interest line under
+review; opening `SchB.1.6` showed its source references, one of which names the
+wrong year outright.
+
+```
+SchB.1.6  value 1,747
+  label   "Interest - Sparbanken Norrland (SEK 18,450.00 at 10.56 SEK/USD)"
+  sources ["ev-0960", "ref:fx.SEK.2024_average"]
+```
+
+The source reference on a 2025 return is `fx.SEK.2024_average`. The packet carries
+all three rates:
+
+```
+SEK_per_USD   2024_average 10.56   2025_average 9.86   2025_year_end 9.71
+```
+
+D36 is a Swedish year-end statement for 2025 (`Årsbesked 2025`), interest credited
+12/31/2025. Converting at the 2025 average gives 1,871, not 1,747 — interest
+understated by **124**, and the label states the wrong rate on the return itself.
+
+**Why the design found it:** `resolveRef` treats an engine parameter as a
+first-class reference, the same as an extracted value, so `ref:fx.SEK.2024_average`
+renders as a chip beside `ev-0960` and resolves to the rate it names. The error is
+visible in the evidence list without opening anything. A workpaper that only traced
+to documents would have shown the SEK amount agreeing perfectly to D36 and stopped
+there — the SEK figure is right; the rate applied to it is not.
+
+**Disposition:** adjustment with a recalculation verification; small in dollars
+(~43 federal at the packet's 0.348 interest rate), but it is a confidently wrong
+number with its own wrong source cited on the face of the return.
+
+---
+
+## F-004 — Schedule B line numbers are positions, not identities **[not in diagnostics]**
+
+**Surfaced by:** label comparison in the prior-year variance engine.
+
+`R-INTEREST-PAYER` emits "one line per interest payer". The payer count went from
+four to eight, so the same line key names a different institution in each year:
+
+| key | 2024 | 2025 |
+|---|---|---|
+| `SchB.1.2` | Meridian Brokerage (U.S. Treasury) | Northlake Bank, N.A. |
+| `SchB.1.3` | Sacramento Valley Bank | Meridian Brokerage - U.S. Treasury |
+| `SchB.1.4` | Sparbanken Norrland | Austin Community Credit Union |
+
+A year-over-year variance on these keys compares unrelated payers. Sacramento
+Valley Bank did not fall from 220 to 96 — it moved from line 3 to line 5.
+
+**Why it matters beyond this line:** a comparison keyed on line number is only
+sound where the line number is a stable identity, and on enumerated lines it is
+not. Flagging the amount swing without noticing this would have produced three
+confident, entirely false variances, and a reviewer chasing them would have
+wasted the time the workpaper is supposed to save.
+
+**Disposition:** the variance engine compares the two years' labels and marks a
+line **not comparable** when both labels name proper nouns and none of them
+overlap. Those lines are reported separately rather than given a percentage, and
+matching payers across years is left to a person.
+
+---

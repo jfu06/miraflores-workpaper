@@ -33,7 +33,8 @@ export type EventType =
   | "review_note_resolved"
   | "signoff"
   | "revert"
-  | "sensitive_view";
+  | "sensitive_view"
+  | "variance_explained";
 
 export type ScopeKind = "line" | "document" | "extracted_value" | "return";
 
@@ -86,6 +87,14 @@ export interface RevertPayload {
   reason?: string;
 }
 
+/**
+ * "Prior-year variances explained" is one of the firm's twelve required steps, so
+ * the explanation is a recorded act with an author and a time, not a comment.
+ */
+export interface VarianceExplainedPayload {
+  text: string;
+}
+
 export interface SensitiveViewPayload {
   /** The reference whose masked value was revealed. */
   ref: string;
@@ -99,7 +108,8 @@ export type EventPayload =
   | ReviewNoteResolvedPayload
   | SignoffPayload
   | RevertPayload
-  | SensitiveViewPayload;
+  | SensitiveViewPayload
+  | VarianceExplainedPayload;
 
 export interface WorkpaperEvent<P = EventPayload> {
   /** Monotonic insertion order; the authoritative sequence. */

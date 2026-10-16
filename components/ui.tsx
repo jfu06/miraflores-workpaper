@@ -31,7 +31,7 @@ export function PaneHeader({
   title,
   right,
 }: {
-  eyebrow?: string;
+  eyebrow?: React.ReactNode;
   title: React.ReactNode;
   right?: React.ReactNode;
 }) {

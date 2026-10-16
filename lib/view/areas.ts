@@ -61,6 +61,9 @@ const FORM_AREA: Record<string, string> = {
 
   SchCA540NR: "california",
   F540NR: "california",
+  // The 2024 return used Form 540, the full-year resident form. Its lines appear
+  // only in the prior-year comparison, and they belong in the California area.
+  CA540: "california",
   ScheduleS: "california",
   FTB3885A: "california",
   FTB5805: "california",

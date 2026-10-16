@@ -16,6 +16,7 @@ interface Props {
   onSelect: (key: string) => void;
   onOpenSource: (ref: string) => void;
   onWorkChanged: () => void;
+  onBack: () => void;
 }
 
 /**
@@ -25,7 +26,7 @@ interface Props {
  * it, what rule produced it, what was it built from, what evidence sits under it,
  * what does it feed, and has the engine said anything about it.
  */
-export function NumberPanel({ lineKey, onSelect, onOpenSource, onWorkChanged }: Props) {
+export function NumberPanel({ lineKey, onSelect, onOpenSource, onWorkChanged, onBack }: Props) {
   const [detail, setDetail] = useState<LineDetail | null>(null);
   const [error, setError] = useState<string | null>(null);
 
@@ -76,7 +77,16 @@ export function NumberPanel({ lineKey, onSelect, onOpenSource, onWorkChanged }: 
   return (
     <div className="flex h-full flex-col">
       <PaneHeader
-        eyebrow={`${areaLabel(detail.area)} · ${detail.jurisdiction === "california" ? "California" : "Federal"}`}
+        eyebrow={
+          <span>
+            <button onClick={onBack} className="hover:text-accent">
+              &larr; Overview
+            </button>
+            <span className="mx-1.5 text-edge">/</span>
+            {areaLabel(detail.area)} ·{" "}
+            {detail.jurisdiction === "california" ? "California" : "Federal"}
+          </span>
+        }
         title={
           <span>
             <span className="font-mono text-[12px] text-muted">

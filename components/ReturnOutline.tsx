@@ -15,6 +15,8 @@ interface Props {
   onSelect: (key: string) => void;
   /** Work done per scope, keyed `line:<key>`, for the status markers. */
   summaries: Record<string, ScopeSummary>;
+  /** Lines with a flagged prior-year variance. */
+  flaggedKeys: Set<string>;
 }
 
 /**
@@ -24,7 +26,7 @@ interface Props {
  * reviewer works in: the firm budgets hours by area, and a form belongs to one.
  * Lines keep the engine's own order inside a form.
  */
-export function ReturnOutline({ outline, selectedKey, onSelect, summaries }: Props) {
+export function ReturnOutline({ outline, selectedKey, onSelect, summaries, flaggedKeys }: Props) {
   const [jurisdiction, setJurisdiction] = useState<Jurisdiction>("federal");
   const [query, setQuery] = useState("");
 
@@ -123,6 +125,14 @@ export function ReturnOutline({ outline, selectedKey, onSelect, summaries }: Pro
                           <span className="min-w-0 flex-1 truncate text-[12px]" title={line.label}>
                             {line.label}
                           </span>
+                          {flaggedKeys.has(line.key) && (
+                            <span
+                              className="shrink-0 text-[10px] text-warn"
+                              title="Flagged against last year by the firm's variance standard"
+                            >
+                              &#9650;
+                            </span>
+                          )}
                           {line.hasNote && (
                             <span
                               className="mt-[5px] size-1.5 shrink-0 rounded-full bg-warn"

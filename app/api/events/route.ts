@@ -64,7 +64,8 @@ export async function POST(request: Request) {
     }
 
     case "note":
-    case "review_note": {
+    case "review_note":
+    case "variance_explained": {
       if (!String(body.payload?.text ?? "").trim()) return bad("A note needs text");
       break;
     }

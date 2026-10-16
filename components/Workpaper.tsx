@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 
 import type { ScopeSummary } from "@/lib/events/summary";
 import type { ResolvedRef } from "@/lib/graph/graph";
@@ -8,6 +8,7 @@ import type { OutlineGroup } from "@/lib/view/models";
 import { formatMoney } from "@/lib/view/format";
 import { EvidencePane, type DocRequest } from "./EvidencePane";
 import { NumberPanel } from "./NumberPanel";
+import { OverviewPane, type Overview } from "./OverviewPane";
 import { ReturnOutline } from "./ReturnOutline";
 import { RoleSwitcher } from "./RoleSwitcher";
 import { Chip } from "./ui";
@@ -37,6 +38,7 @@ export function Workpaper({ meta, outline }: Props) {
   const [docRequest, setDocRequest] = useState<DocRequest | null>(null);
   const [record, setRecord] = useState<ResolvedRef | null>(null);
   const [summaries, setSummaries] = useState<Record<string, ScopeSummary>>({});
+  const [overview, setOverview] = useState<Overview | null>(null);
 
   /**
    * Bumped whenever the acting role changes, to force the detail panes to refetch.
@@ -45,20 +47,29 @@ export function Workpaper({ meta, outline }: Props) {
    */
   const [revision, setRevision] = useState(0);
 
-  const refreshWork = useCallback(() => {
-    setRevision((r) => r + 1);
+  const loadDerived = useCallback(() => {
     fetch("/api/summary")
       .then((r) => r.json())
       .then((d: { summaries: Record<string, ScopeSummary> }) => setSummaries(d.summaries))
+      .catch(() => undefined);
+    fetch("/api/overview")
+      .then((r) => r.json())
+      .then((d: Overview) => setOverview(d))
       .catch(() => undefined);
   }, []);
 
-  useEffect(() => {
-    fetch("/api/summary")
-      .then((r) => r.json())
-      .then((d: { summaries: Record<string, ScopeSummary> }) => setSummaries(d.summaries))
-      .catch(() => undefined);
-  }, []);
+  const refreshWork = useCallback(() => {
+    setRevision((r) => r + 1);
+    loadDerived();
+  }, [loadDerived]);
+
+  useEffect(loadDerived, [loadDerived]);
+
+  /** Flagged prior-year variances, for the markers in the outline. */
+  const flaggedKeys = useMemo(
+    () => new Set((overview?.variance.rows ?? []).filter((r) => r.flagged).map((r) => r.key)),
+    [overview],
+  );
 
   /**
    * One entry point for every reference click in the app.
@@ -134,16 +145,22 @@ export function Workpaper({ meta, outline }: Props) {
             selectedKey={selectedKey}
             onSelect={selectLine}
             summaries={summaries}
+            flaggedKeys={flaggedKeys}
           />
         </div>
         <div className="min-h-0 bg-surface">
-          <NumberPanel
-            key={`line-${revision}`}
-            lineKey={selectedKey}
-            onSelect={selectLine}
-            onOpenSource={openSource}
-            onWorkChanged={refreshWork}
-          />
+          {selectedKey === null ? (
+            <OverviewPane data={overview} onSelect={selectLine} onChanged={refreshWork} />
+          ) : (
+            <NumberPanel
+              key={`line-${revision}`}
+              lineKey={selectedKey}
+              onSelect={selectLine}
+              onOpenSource={openSource}
+              onWorkChanged={refreshWork}
+              onBack={() => setSelectedKey(null)}
+            />
+          )}
         </div>
         <div className="min-h-0 bg-surface">
           <EvidencePane

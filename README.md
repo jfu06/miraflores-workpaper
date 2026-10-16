@@ -84,6 +84,33 @@ sign-off attests to this number and the work done on it. If a verification is
 withdrawn two lines upstream but no number moves, what was signed is still true;
 if a number does move, the fact half catches it.
 
+### Prior-year comparison
+
+The firm's own standard is read from the packet, not hard-coded: flag a change
+over 10 percent **and** over 1,000, both conditions as written. The comparison is
+driven by the 2024 line set — 106 key lines against this year's 627 — because
+"new in 2025" would otherwise be an artifact of granularity and would bury the
+signal.
+
+Two things it refuses to do, and both matter more than what it computes:
+
+**It does not map Form 540 to Form 540NR.** The household moved in July, so last
+year's full-year California return and this year's part-year return share no line
+numbers. Deciding that `CA540.17` corresponds to some line on Schedule CA (540NR)
+is a tax judgment. Nineteen prior lines are reported as unmatched, with the reason
+derived from the residency records, and a person explains them.
+
+**It does not subtract across different subjects.** `R-INTEREST-PAYER` emits one
+Schedule B line per interest payer, so a line key is a position, not an identity:
+the household had four payers in 2024 and eight in 2025, and `SchB.1.3` names
+Sacramento Valley Bank one year and Meridian Brokerage the next. Lines whose two
+labels name entirely different proper nouns are marked **not comparable** and given
+no percentage. Without that check the workpaper would have produced three
+confident, entirely false variances (see F-004).
+
+"Prior-year variances explained" is one of the firm's twelve required steps, so an
+explanation is a recorded event with an author and a time, not a comment.
+
 ### Roles, masking and the view log
 
 The acting role lives in a server-side cookie, not in the browser. That is what
@@ -142,6 +169,12 @@ and they come back, because the hash returns to what it was — while all five e
 stay in the history, two of them struck through.
 
 Switch to Marcus Bell, who has no clearance, and the SSNs mask in the page itself.
+
+With no line selected, the middle pane is the overview a reviewer opens the file
+for: this return against last year for both jurisdictions, with a caveat marked
+where the two years are not measured on the same basis; the state of each review
+area against the firm's budget; and every flagged variance, with the not-comparable
+and unmatched ones called out ahead of the swings.
 
 ## Not built yet
 
