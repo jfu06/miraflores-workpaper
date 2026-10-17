@@ -9,7 +9,7 @@ Node's built-in `node:sqlite` is only available without a flag from Node 23.4 an
 stable in 24, so the `Dockerfile` pins **Node 24** rather than letting a builder
 guess. `railway.json` tells Railway to use that Dockerfile.
 
-Verified locally before deploying: the image builds, serves 18 checks and 108
+Verified locally before deploying: the image builds, serves 19 checks and 112
 findings, writes an event, and the event survives the container being destroyed
 and recreated against the same volume.
 
@@ -19,7 +19,7 @@ and recreated against the same volume.
 build, volume mounted at `/data`.
 
 Verified on the deployed service, not just locally: all endpoints answer, the app
-reports its own 18 checks and 108 findings, an event written through the API
+reports its own 19 checks and 112 findings, an event written through the API
 survived a redeploy onto a new container, and both of Letter 566's examined items
 carry a high-severity finding.
 
@@ -47,7 +47,7 @@ Railway sets `PORT` itself and the server reads it.
 curl -s https://<your-domain>/api/checks | head -c 120
 ```
 
-Should report 18 checks. Then open the domain, go to **Open items**, and record
+Should report 19 checks. Then open the domain, go to **Open items**, and record
 anything — a note on a line will do. Redeploy and look again: it is still there.
 
 ## Seeding a demonstration state

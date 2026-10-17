@@ -1,11 +1,11 @@
 # The errors found, and how the design surfaced them
 
-**These are check output, not a list kept by hand.** Eighteen checks run against
+**These are check output, not a list kept by hand.** Nineteen checks run against
 the packet; `npm run checks` prints what they find and the Open items tab shows
 the same thing. Every claim below can be re-run.
 
 The engine's own v3 diagnostics are an input, not a verdict — one check re-tests
-the condition each asserts. **All nine write-ups below are things the engine does
+the condition each asserts. **All ten write-ups below are things the engine does
 not report.**
 
 ## Summary
@@ -14,7 +14,8 @@ not report.**
 |---|---|---|---|---|
 | F-008 | Form 1099-K added to books revenue it is already inside | **12,400** | overstated gross receipts, ≈ **4,402** federal tax | `RECON-SCHC-GROSS` |
 | F-009 | Donated car deducted at the client's estimate, not the charity's sale proceeds | **3,100** | overstated deduction | `RECON-NONCASH-GIFT` |
-| F-002 | All wages sourced to California despite 195 days' residency | **218,400** | sourced whole; apportioning suggests ≈ 89,000 overstated, ≈ **5,600** California tax | `INT-STATE-SOURCE` |
+| F-002 | All wages sourced to California, contradicted by a paystub in the file | **88,831** | overstated California-source wages, ≈ **5,685** California tax | `INT-STATE-SOURCE` |
+| F-010 | Four documents reach no line and nothing explains why | — | one of them is the evidence for F-002 | `DOC-UNEXPLAINED` |
 | F-005 | Both estimated payment figures disagree with the agencies | **1,000** + **3,500** | overstated payments; balance moves one for one | `RECON-AGENCY` |
 | F-006 | Three pages print amounts never extracted | **250** traced | one unread lot explains a tie-out difference exactly | `DOC-PAGE-UNREAD` |
 | F-003 | 2025 foreign interest converted at the 2024 exchange rate | **124** | understated interest, ≈ 43 federal tax | `INT-PARAM-YEAR` |
@@ -36,7 +37,7 @@ found them, and one of those checks exists *because* the letter says to look.
 ## The suite
 
 ```
-18 checks, 108 findings — 17 high, 57 medium, 34 low
+19 checks, 112 findings — 17 high, 61 medium, 34 low
 
 EV-NOT-ON-PAGE             1   Extracted amount does not appear on its own page
 EV-LOW-CONFIDENCE          2   Low-confidence reading used on the return
@@ -44,6 +45,7 @@ DOC-CONFLICT               2   Two documents of the same thing disagree
 DOC-SUPERSEDED-USED        0   A superseded document still feeds the return
 TIE-OUT-DETAIL             2   Transaction detail does not add to the summary
 DOC-PAGE-UNREAD            4   A document page was never read
+DOC-UNEXPLAINED            4   A document reaches no line and nothing says why
 RECON-AGENCY               2   Payments do not agree to the agency's records
 RECON-SCHC-GROSS           1   Gross receipts do not reconcile to third-party forms
 RECON-NONCASH-GIFT         1   A noncash gift is valued above its own acknowledgment
@@ -116,59 +118,62 @@ but flags it as non-standard rather than silently normalizing it.
 
 ---
 
-## F-002 — All wages sourced to California, for a household resident there 195 of 365 days **[not in diagnostics]**
+## F-002 — All wages sourced to California, contradicted by a paystub already in the file **[not in diagnostics]**
 
 **Check:** `INT-STATE-SOURCE`, which compares the California column against the
-total column on Schedule CA (540NR) line by line and reads the household's own
-residency dates. Found first by hand, tracing `SchCA540NR.1.E` and reading its
-source documents in the evidence pane; the check was written afterwards so the
-same class of error is caught without someone happening to look.
+total column on Schedule CA (540NR) line by line, reads the household's own
+residency dates, and looks for a payroll record that states the state-taxable
+figure directly.
 
 ```
 SchCA540NR.1.D  Wages - total using CA law   218,400
 SchCA540NR.1.E  Wages - California amount    218,400   rule R-CA-WAGES-SOURCE
 ```
 
-The California-source amount equals the total. Every dollar of wages is sourced to
-California. But `household.residency` records CA residency ending 2025-07-14, and
-`engine_reference.parameters.ca_resident_days` is 195 of 365.
+Every dollar of wages is sourced to California. `household.residency` ends
+California on 2025-07-14, and `ca_resident_days` is 195 of 365.
 
-The rule is literal: `R-CA-WAGES-SOURCE — California-source wages from Form W-2
-box 16.` It takes box 16 at face value. D09's printed page says why that is wrong,
-in its own parenthetical:
+The rule is literal — *"California-source wages from Form W-2 box 16"* — and
+Halvorsen reported box 16 of 111,300 against box 1 of 107,800, essentially the
+whole year, because, as D09's own page says, *"Employer payroll kept California
+as the work state through 09/30/2025."*
 
-> Employment began 06/02/2025. Employer payroll kept California as the work state
-> through 09/30/2025.
+### The file already contains the right figure
 
-So Halvorsen reported box 16 of 111,300 against box 1 of 107,800 — essentially the
-full year, plus the 3,500 HSA add-back California does not exclude. Ngozi worked
-remotely from Sacramento only until the 07/15 move; the rest was Texas.
+**D73**, a Halvorsen paystub, pay date 2025-07-18:
 
-Corvane is not affected: that employment ended in May, while the household was
-still resident in California, so those wages are correctly California-source.
+> Pay period 07/01/2025–07/15/2025. **Work location changed to Austin, TX
+> effective 07/15/2025.** Year-to-date as of 07/15/2025: gross wages 25,969.00;
+> **CA taxable wages 22,469.00.**
 
-**Magnitude.** Halvorsen employment ran 06/02–12/31 (213 days), of which 06/02–07/14
-(43 days) was California residency. Sourcing on that basis gives roughly 21,800
-rather than the 111,300 used — about 89,000 of overstated California-source wages.
-At the packet's own `ca_source_income` rate of 0.063 per dollar, that is on the
-order of **5,600 of California tax**, well over the firm's 1,000 threshold for
-partner sign-off on an adjustment.
+It arrived **2026-03-27**, three months before v3 was computed on 2026-06-23. It
+was extracted — `ev-1081`, `ytd_ca_wages = 22,469`, confidence 0.99. **No line on
+the return cites it.**
 
-**Why the design found it:** two things had to meet. The trace showed line 1.E
-taking its value from box 16 through a rule that does no apportionment, and the
-evidence pane renders the whole printed page rather than just the extracted box,
-so the payroll-state sentence sits directly beside the number it undermines. An
-extraction-only view would never show that sentence — no value was extracted from it.
+| | |
+|---|---|
+| Corvane box 16 — employment ended in May, resident throughout | 107,100 |
+| Halvorsen California wages at the move, per D73 | 22,469 |
+| **should be** | **129,569** |
+| return reports | 218,400 |
+| **overstated by** | **88,831** |
 
-**Note on what this is not:** box 16 exceeding box 1 is correct, not an error.
-The 3,500 difference is exactly box 12 W, the employer HSA contribution, which
-California does not exclude. Checked and dismissed before reporting.
+At the packet's own `ca_source_income` rate of 0.064, about **5,685 of California
+tax**.
 
-**Disposition:** a judgment call requiring a wage apportionment, client
-confirmation of the work-location dates, and partner sign-off on the adjustment.
-The README's description of the `ca_source_income` rate names "a California wage
-split" as its example use, which suggests this is a scenario the packet intends
-to be found.
+**Why the design found it, twice.** The state-sourcing check noticed that a
+part-year return was sourcing an item whole. The document index then noticed that
+D73 reaches nothing and nothing explains why. The two met: the check now quotes
+the paystub, so the finding carries the figure rather than an apportionment this
+workpaper would have had to invent.
+
+That is the difference the document index makes. Before it, D73 could not be
+opened in the application at all — a document is only reachable by clicking a
+source reference on a line, and no line references this one.
+
+**Disposition:** a judgment call on the apportionment basis, which is the
+preparer's to make, so the check deliberately carries **no suggested adjustment**.
+It carries the contradicting document instead.
 
 ---
 
@@ -458,5 +463,42 @@ IRS will ask for, and it contradicts the return.
 
 **Disposition:** adjust to 2,900, or document the basis for a different figure.
 The check carries the exact figure, so it can be applied rather than retyped.
+
+---
+
+## F-010 — Four documents reach no line and nothing explains why **[not in diagnostics]**
+
+**Check:** `DOC-UNEXPLAINED`. Walks the reverse index from documents to lines,
+then tries every explanation the file itself can offer.
+
+Of 74 documents, 56 reach a line on the current return and 18 do not. Fourteen of
+those eighteen are explained by the file:
+
+| reason | count | |
+|---|---|---|
+| evidence for a required step | 6 | engagement letter, consents, identity documents, IP PIN |
+| never extracted | 4 | agency records and the prior preparer's workpaper, reproduced as structured data |
+| cited by the prior-year records | 2 | the 2024 return, the home purchase closing statement |
+| superseded | 1 | the original Meridian 1099, displaced by the corrected copy |
+| duplicate | 1 | the phone photo of the Halvorsen W-2 |
+
+**Four have no explanation at all**, and each is substantive:
+
+| | what it is | what it bears on |
+|---|---|---|
+| `D73` | Halvorsen paystub, 07/18/2025 | **the evidence for F-002** — states CA taxable wages of 22,469 at the move |
+| `D15` | books transaction detail | **the evidence for F-008** — records the card deposits as already in Sales |
+| `D13` | Form 3922, ESPP transfer | the basis on the ESPP sale, where the return used a different document |
+| `D47` | HVAC invoice, 11,000 | the repair-or-improvement judgment the packet supplies a what-if for |
+
+Two of the four are the proof of the two largest errors in the file. Both were
+read by the pipeline, both have been sitting in the engagement since February and
+March, and until there was an index neither could be opened.
+
+**Why it matters as a class, not as four items:** "Prove completeness: every
+document used" is one of the things the workpaper has to do, and a document that
+nobody cites and nobody has explained is either a missed inclusion or an
+unrecorded decision. Both deserve a sentence from a person. The check cannot tell
+which; it can tell you that nobody has said.
 
 ---

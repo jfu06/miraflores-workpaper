@@ -124,9 +124,36 @@ must never disagree.
 Partner threshold: the California one needs partner sign-off at 3,500 effect.
 Priya proposed it, so Priya can't approve it. ✂ (show the refusal, it's one click)
 
+## 7:30 — Every document, and where it went  ✂
+
+Documents tab. 74 documents, 56 landed, **18 reached no line**, and the filter
+that matters: **4 explained by nothing**.
+
+> Until this index existed a document could only be reached by clicking a source
+> on a line. So these eighteen couldn't be opened at all — including two that are
+> the proof of the two largest errors in the file.
+
+Click **D73**. A paystub dated 07/18/2025: *"work location changed to Austin, TX
+effective 07/15/2025 … CA taxable wages 22,469."* It arrived in March, three
+months before the engine's last run, it was extracted, and nothing cites it —
+while the return sources all 218,400 of wages to California off box 16.
+
+> That's 88,831 overstated and about 5,685 of California tax, and I didn't have
+> to apportion anything to say so. The document was in the file.
+
+## 7:50 — 295 lots, without reading 295 lots  ✂
+
+Sales tab. Box totals first, each tied to the engine's own figure for that box —
+all seven tie. Then **45 lots worth a look**: 28 wash sales, 13 whose basis came
+from a second document, 4 with no basis reported at all.
+
+> The RSU lots report zero basis, which is the classic way an RSU sale gets taxed
+> twice. Those are the four a reviewer should open, and they're on the first
+> screen.
+
 ## 8:00 — The checks, and what "we checked this" means
 
-`npm run checks` in the terminal: **18 checks, 108 findings**.
+`npm run checks` in the terminal: **19 checks, 112 findings**.
 
 Open items tab. Low findings are hidden by default — 78 of the 108 are
 unexplained prior-year variances and they bury everything else. Say that, then

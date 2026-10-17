@@ -17,7 +17,7 @@ it names rather than writing a fixture.
 ```bash
 npm install
 npm run dev        # http://localhost:3000
-npm run checks     # 18 checks, 108 findings
+npm run checks     # 19 checks, 112 findings
 npm run verify     # every claim in this repo, re-run
 ```
 
@@ -36,10 +36,11 @@ the app at a different one without a code change.
 | **[FINDINGS.md](FINDINGS.md)** | The errors found, and how the design surfaced them |
 | **[VIDEO.md](VIDEO.md)** | Walkthrough outline |
 
-Nine errors are written up, all of them things the engine's own diagnostics do
-not report, and **both items the IRS is examining in the 2028 letter have
-findings**. None was written by hand — the checks found them, and one of those
-checks exists because the letter says to look.
+Ten errors are written up, all of them things the engine's own diagnostics do not
+report, and **both items the IRS is examining in the 2028 letter have findings**.
+None was written by hand — the checks found them, one of those checks exists
+because the letter says to look, and the largest California finding is carried by
+a paystub that had been sitting unread in the file since March.
 
 The rest of this file is the detail behind the one-pager.
 
@@ -159,14 +160,38 @@ does. Revealing one is a separate request that checks clearance and appends a
 `sensitive_view` event before returning the value, so the log records actual
 disclosures rather than page loads.
 
+### Every document, and where it went
+
+The brief asks to trace any document "to everywhere it landed, **or why it
+didn't**", and the second half turned out to be the one that mattered. Until the
+index existed a document could only be reached by clicking a source reference on
+a line, so the eighteen that reach no line could not be opened at all.
+
+Each reason is derived from the file, not guessed: displaced by a corrected copy,
+never extracted, cited by the prior-year records, a duplicate, or evidence for a
+required step. Fourteen are explained that way. **Four are explained by nothing**,
+and that is a check of its own — because two of those four are the proof of the
+two largest errors in the file. See F-002 and F-010.
+
+### Large detail, arranged so nobody reads it all
+
+295 sale lots across seven boxes. Box totals first, each tied against the
+engine's own figure for that box; then the 45 lots something is unusual about —
+28 wash sales, 13 whose basis came from a second document, 4 with no basis
+reported; then the rest on request. A reviewer who reads only the first screen
+has still seen everything that could be wrong.
+
+Lots are assembled from each line's own source values rather than by parsing the
+label's prose, so a lot's fields are the figures the pipeline read.
+
 ### Checks that do not trust the engine
 
-Eighteen checks run against the packet. Each declares what it recomputes or
+Nineteen checks run against the packet. Each declares what it recomputes or
 cross-reads for itself, and the app shows that sentence next to every finding, so
 "we checked this" is a claim a reviewer can inspect rather than take on faith.
 
 ```bash
-npm run checks     # 18 checks, 108 findings — 17 high, 57 medium, 34 low
+npm run checks     # 19 checks, 112 findings — 17 high, 57 medium, 34 low
 ```
 
 They never read the event log. A finding cannot be made to disappear by doing
@@ -344,8 +369,10 @@ filing timeline.
 
 ## Not built yet
 
-Timeline replay, filing and the freeze, amendment, the notice record, and the
-client-facing views. See the plan.
+The remaining CPA records are the same shape repeated over data the model already
+carries: depreciation by asset, books to tax, rentals and passive losses, K-1
+lines, and the state split as a dedicated view rather than as lines in the
+outline. The client-facing views are also absent.
 
 ## Findings
 
