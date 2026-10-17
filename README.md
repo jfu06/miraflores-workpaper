@@ -4,9 +4,15 @@ A web-native tax workpaper built from the Miraflores packet.
 
 **Running:** <https://miraflores-workpaper-production-756f.up.railway.app>
 
-Open it and nothing is set up — that is the point. Pick a line, trace it, record
-a verification, raise a question, sign off, move the clock. Everything you do is
-saved; the role switcher is in the header.
+It is seeded with a worked file: the client asked about the ambiguous receipt and
+their phoned-in answer attached as evidence, four adjustments including two
+applied as one bulk action, sign-offs at preparer and reviewer level, a blocking
+review note on the California wage split, the federal return filed and frozen,
+and an amendment open on top of it for the 1099-K double count. The role switcher
+is in the header; everything you do is saved.
+
+`npm run seed` reproduces that state anywhere, by driving the API as the people
+it names rather than writing a fixture.
 
 ```bash
 npm install

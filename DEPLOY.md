@@ -50,6 +50,35 @@ curl -s https://<your-domain>/api/checks | head -c 120
 Should report 18 checks. Then open the domain, go to **Open items**, and record
 anything — a note on a line will do. Redeploy and look again: it is still there.
 
+## Seeding a demonstration state
+
+```bash
+npm run seed                                     # against localhost:3000
+npm run seed -- --url https://<your-domain>      # against a deployed instance
+npm run seed -- --no-file                        # stop before filing
+```
+
+`scripts/seed.mjs` is a scripted session, not a fixture: it drives the app's own
+HTTP API as Priya, Daniel and Helen in turn, so it meets the same rules a
+reviewer does — independence, the 1,000 partner threshold, the filing freeze. If
+one of those rules changes the seed fails loudly rather than writing a state the
+app would never produce. It did exactly that on its first run, which is how three
+missing tax-effect categories were found.
+
+Use `--no-file` when recording a walkthrough, so the freeze can happen on camera.
+
+### Starting over
+
+The event log is append-only, so there is no reset — you start a new book.
+Point `EVENTS_DB_PATH` at a different file:
+
+```bash
+railway variables --set "EVENTS_DB_PATH=/data/demo-2.db"
+```
+
+Locally, delete `data/events.db*` **and restart the dev server** — the open
+handle survives the file.
+
 ## Anywhere else
 
 Any host that runs a container with a disk works the same way. The only two

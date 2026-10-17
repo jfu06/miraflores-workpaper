@@ -20,7 +20,13 @@ interface Props {
   /** Lines carrying a high-severity check finding. */
   findingKeys: Set<string>;
   /** Lines the adjustment ledger has moved, with how the new figure was arrived at. */
-  adjustedLines: { key: string; value: number; original: number; provenance: string }[];
+  adjustedLines: {
+    key: string;
+    value: number;
+    original: number;
+    provenance: string;
+    limitation?: string;
+  }[];
 }
 
 /**
@@ -191,20 +197,40 @@ export function ReturnOutline({
                               {line.sourceCount}
                             </span>
                           )}
+                          {/*
+                            Two different things wear a marker here, and they are
+                            not the same news. A figure that moved is shown in
+                            accent with a filled dot. A barrier — a line a change
+                            reached but could not be carried through — keeps the
+                            engine's number and gets a hollow warning dot, because
+                            that number is now stale rather than wrong.
+                          */}
                           <span
                             className={`tnum shrink-0 text-right text-[12px] font-medium ${
-                              moved ? "text-accent" : ""
+                              moved && moved.value !== moved.original
+                                ? "text-accent"
+                                : moved
+                                  ? "text-warn"
+                                  : ""
                             }`}
                             title={
-                              moved
-                                ? `${moved.provenance} — the engine published ${formatValue(
-                                    moved.original,
-                                  )}`
-                                : undefined
+                              !moved
+                                ? undefined
+                                : moved.value !== moved.original
+                                  ? `${moved.provenance} — the engine published ${formatValue(
+                                      moved.original,
+                                    )}`
+                                  : `A change reached this line but could not be carried through it. ${
+                                      moved.limitation ?? ""
+                                    }`
                             }
                           >
                             {formatValue(moved ? moved.value : line.value)}
-                            {moved && <span className="ml-0.5 text-[9px]">&bull;</span>}
+                            {moved && (
+                              <span className="ml-0.5 text-[9px]">
+                                {moved.value !== moved.original ? "\u2022" : "\u25cb"}
+                              </span>
+                            )}
                           </span>
                         </button>
                       </li>
