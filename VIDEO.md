@@ -229,7 +229,7 @@ Four, briefly. These are the ones I'd want asked about:
    payment, one is a deduction. A sum would look like exposure and wouldn't be.
 3. **Estimated effects stay labelled estimated**, and where recomputation reaches
    a balance it supersedes them rather than sitting beside them.
-4. **What I'd build next:** the large-detail views — 282 sales, the depreciation
+4. **What I'd build next:** the large-detail views — 295 sales lots, the depreciation
    schedule, books-to-tax, the state split. The data model carries them; they're
    presentation. I spent the time on the spine instead, because that's what every
    view hangs off.
