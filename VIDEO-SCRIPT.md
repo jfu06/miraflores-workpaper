@@ -20,6 +20,21 @@ Word counts are per section so you can trade.
 Below about eleven minutes you start cutting things the brief explicitly asked
 to see. If no length was stated, record the full version.
 
+**录之前（三件事）**
+
+1. 先铺演示状态，否则冻结申报那段没东西可演：
+
+   ```
+   npm run seed -- --no-file
+   ```
+
+2. **浏览器窗口至少 1900px 宽。** 这是硬要求，不是建议：1600px 时
+   **After filing 这个 tab 会被右边 Evidence 栏盖住，点不动**（元素在，但
+   `elementFromPoint` 命中的是 Evidence）。1900 以上正常。
+3. 先录两分钟废片，确认麦克风电平和字够不够清楚。
+
+先看一遍 `walkthrough.webm`（1 分 53 秒，带鼠标和字幕），把点击顺序记住再开录。
+
 **Practise these once:**
 
 | | |
