@@ -58,6 +58,14 @@ of it; the event layer is next.
 
 ## Data model
 
+![](docs/one-number.svg)
+
+<sub>**Every number reaches its evidence two ways, and one resolver opens both.** The packet's
+facts are immutable; the workpaper's events only ever append. Both produce references in the same
+grammar, so a client's phoned-in answer opens exactly like a box on a Form W-2 — and here it is
+what resolves a receipt whose first digit the pipeline could not read.</sub>
+
+
 The fact layer is read-only and indexed from the packet. The event layer is the
 only thing that ever changes, and it only ever grows.
 
@@ -241,6 +249,14 @@ is ambiguous, `msg-07` supplies the cost of the crypto lot the engine gave a zer
 basis. Those are the shape this models.
 
 ### Adjusting, and the four kinds of number
+
+![](docs/four-kinds.svg)
+
+<sub>**An adjustment is carried as far as recovered arithmetic allows, and no further.** The engine
+cannot be rerun, so the combination behind each line is solved against the engine's own published
+figures and verified. Where it cannot be recovered, propagation stops and the lines beyond are
+reported as unknown rather than estimated into place.</sub>
+
 
 The engine cannot be rerun, and the packet offers per-dollar rates instead. That
 makes the central design question honest bookkeeping: every number in an adjusted

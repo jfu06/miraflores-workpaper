@@ -1,0 +1,85 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 604" width="900" height="604" role="img"
+     aria-label="An adjustment is carried upward by arithmetic recovered from the engine's own figures and verified against them, and stops at seven lines whose arithmetic could not be recovered. Beyond those, 81 lines including the tax computation are unknown, not approximate.">
+  <defs>
+    <marker id="b" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="#4a4a47"/>
+    </marker>
+    <marker id="bw" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="#8a5a00"/>
+    </marker>
+  </defs>
+
+  <rect width="900" height="604" fill="#fbfbfa"/>
+  <g font-family="ui-sans-serif, -apple-system, Segoe UI, Helvetica, Arial, sans-serif" fill="#1a1a19">
+
+    <!-- manual -->
+    <rect x="270" y="24" width="360" height="62" rx="4" fill="#ffffff" stroke="#1f5c8b" stroke-width="1.5"/>
+    <text x="286" y="44" font-size="11" font-weight="700" fill="#1f5c8b" letter-spacing="0.6">MANUAL</text>
+    <text x="286" y="66" font-size="13"><tspan font-family="ui-monospace, Menlo, monospace" fill="#6b6b68">SchC.1</tspan>  Gross receipts</text>
+    <text x="614" y="66" text-anchor="end" font-size="13"><tspan fill="#6b6b68">163,700</tspan> &#8594; <tspan font-weight="600">151,300</tspan></text>
+    <text x="286" y="80" font-size="0" fill="#6b6b68"> </text>
+
+    <path d="M450,86 L450,118" fill="none" stroke="#4a4a47" stroke-width="1.2" marker-end="url(#b)"/>
+    <text x="462" y="107" font-size="11" fill="#6b6b68">the engine cannot be rerun, so the arithmetic is recovered from its own figures</text>
+
+    <!-- recomputed -->
+    <rect x="60" y="122" width="780" height="150" rx="4" fill="#ffffff" stroke="#1f5c8b" stroke-width="1.5"/>
+    <text x="76" y="142" font-size="11" font-weight="700" fill="#1f5c8b" letter-spacing="0.6">RECOMPUTED &#183; EXACT</text>
+    <text x="824" y="142" text-anchor="end" font-size="11" fill="#6b6b68">128 lines solved and verified against the engine, 19 of them subtracting</text>
+
+    <g font-size="12">
+      <rect x="76" y="156" width="168" height="44" rx="3" fill="#f7fafc" stroke="#cfe2ef"/>
+      <text x="88" y="174" font-family="ui-monospace, Menlo, monospace" font-size="11" fill="#6b6b68">SchC.31</text>
+      <text x="88" y="191">81,854 &#8594; 69,454</text>
+
+      <path d="M250,178 L268,178" fill="none" stroke="#4a4a47" stroke-width="1.2" marker-end="url(#b)"/>
+
+      <rect x="274" y="156" width="168" height="44" rx="3" fill="#f7fafc" stroke="#cfe2ef"/>
+      <text x="286" y="174" font-family="ui-monospace, Menlo, monospace" font-size="11" fill="#6b6b68">F1040.9</text>
+      <text x="286" y="191">480,987 &#8594; 468,587</text>
+
+      <path d="M448,178 L466,178" fill="none" stroke="#4a4a47" stroke-width="1.2" marker-end="url(#b)"/>
+
+      <rect x="472" y="156" width="200" height="44" rx="3" fill="#eaf2f8" stroke="#1f5c8b"/>
+      <text x="484" y="174" font-size="11" fill="#6b6b68"><tspan font-family="ui-monospace, Menlo, monospace">F1040.11</tspan>  adjusted gross income</text>
+      <text x="484" y="191" font-weight="600">445,590 &#8594; 433,190</text>
+    </g>
+
+    <text x="76" y="226" font-size="11" fill="#6b6b68">and six more lines between them, each derived from the adjusted inputs and reproducing the engine exactly</text>
+    <text x="76" y="252" font-size="12">Every figure here is arithmetic, not approximation. Nothing is estimated while it can still be derived.</text>
+
+    <!-- barrier -->
+    <path d="M450,272 L450,304" fill="none" stroke="#8a5a00" stroke-width="1.4" marker-end="url(#bw)"/>
+
+    <rect x="60" y="308" width="780" height="128" rx="4" fill="#fdf4e3" stroke="#8a5a00" stroke-width="1.5" stroke-dasharray="6 3"/>
+    <text x="76" y="328" font-size="11" font-weight="700" fill="#8a5a00" letter-spacing="0.6">WHERE IT STOPS &#183; 7 LINES</text>
+    <text x="76" y="352" font-size="12" fill="#5b4300">Seven lines cannot carry the change through: six are not arithmetic over their inputs, and one is this.</text>
+    <g font-family="ui-monospace, SFMono-Regular, Menlo, monospace" font-size="11" fill="#8a5a00">
+      <text x="76" y="376">R-DEDUCTION-CHOICE</text><text x="232" y="376">R-QBI</text><text x="300" y="376">R-SE</text>
+      <text x="356" y="376">R-SEP-LIMIT</text><text x="456" y="376">R-SEHI</text><text x="520" y="376">R-CA-ITEMIZED</text>
+      <text x="76" y="396">SchCA540NR.12.A</text>
+      <text x="200" y="396" font-family="ui-sans-serif, Segoe UI, sans-serif" fill="#5b4300">&#8212; its declared inputs cannot produce its own value</text>
+    </g>
+    <text x="76" y="412" font-size="11" fill="#5b4300">The rate table estimates each adjustment&#8217;s effect &#8212; that is what the partner threshold is measured against &#8212; but it</text>
+    <text x="76" y="426" font-size="11" fill="#5b4300">is never used to restate the lines beyond, because an estimate printed as a line would read as a figure.</text>
+
+    <!-- beyond -->
+    <path d="M450,436 L450,462" fill="none" stroke="#8a5a00" stroke-width="1.4" stroke-dasharray="4 3" marker-end="url(#bw)"/>
+
+    <rect x="60" y="466" width="780" height="60" rx="4" fill="#ffffff" stroke="#e4e4e2" stroke-dasharray="4 3"/>
+    <text x="76" y="488" font-size="11" font-weight="700" fill="#6b6b68" letter-spacing="0.6">BEYOND &#183; 81 LINES</text>
+    <text x="76" y="510" font-size="12" fill="#6b6b68">Including <tspan font-family="ui-monospace, Menlo, monospace">F1040.16</tspan>, the tax itself. These are <tspan font-weight="600" fill="#1a1a19">unknown, not approximately known</tspan>, and the workpaper restates none of them.</text>
+
+    <!-- legend -->
+    <g font-size="11">
+      <rect x="60" y="552" width="12" height="12" rx="2" fill="#ffffff" stroke="#c8c8c5"/>
+      <text x="80" y="562" fill="#6b6b68">engine &#8212; as published</text>
+      <rect x="236" y="552" width="12" height="12" rx="2" fill="#ffffff" stroke="#1f5c8b"/>
+      <text x="256" y="562" fill="#6b6b68">manual &#8212; a person, with a reason</text>
+      <rect x="470" y="552" width="12" height="12" rx="2" fill="#eaf2f8" stroke="#1f5c8b"/>
+      <text x="490" y="562" fill="#6b6b68">recomputed &#8212; derived and verified</text>
+      <rect x="710" y="552" width="12" height="12" rx="2" fill="#fdf4e3" stroke="#8a5a00"/>
+      <text x="730" y="562" fill="#6b6b68">estimated &#8212; and labelled so</text>
+    </g>
+  </g>
+</svg>

@@ -1,0 +1,83 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 612" width="900" height="612" role="img"
+     aria-label="One return line reaches its evidence two ways: the packet's immutable facts and the workpaper's append-only events. Both produce references, and one resolver opens all of them.">
+  <defs>
+    <marker id="a" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="#4a4a47"/>
+    </marker>
+    <marker id="aw" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="#8a5a00"/>
+    </marker>
+  </defs>
+
+  <rect width="900" height="612" fill="#fbfbfa"/>
+  <g font-family="ui-sans-serif, -apple-system, Segoe UI, Helvetica, Arial, sans-serif" fill="#1a1a19">
+
+    <!-- the number -->
+    <rect x="290" y="24" width="320" height="56" rx="4" fill="#ffffff" stroke="#1f5c8b" stroke-width="1.5"/>
+    <text x="450" y="46" text-anchor="middle" font-size="12" fill="#6b6b68" font-family="ui-monospace, SFMono-Regular, Menlo, monospace">SchA.11</text>
+    <text x="450" y="66" text-anchor="middle" font-size="14" font-weight="600">Gifts by cash or check &#183; 3,350</text>
+
+    <!-- splay -->
+    <path d="M400,80 L400,100 L230,100 L230,126" fill="none" stroke="#4a4a47" stroke-width="1.2" marker-end="url(#a)"/>
+    <path d="M500,80 L500,100 L670,100 L670,126" fill="none" stroke="#4a4a47" stroke-width="1.2" marker-end="url(#a)"/>
+    <text x="318" y="93" text-anchor="middle" font-size="12" fill="#6b6b68">which facts is it made of</text>
+    <text x="582" y="93" text-anchor="middle" font-size="12" fill="#6b6b68">whose actions touched it</text>
+
+    <!-- FACTS -->
+    <rect x="60" y="130" width="340" height="150" rx="4" fill="#ffffff" stroke="#e4e4e2"/>
+    <text x="76" y="150" font-size="11" font-weight="700" fill="#6b6b68" letter-spacing="0.6">FACTS &#183; THE PACKET, IMMUTABLE</text>
+    <text x="76" y="176" font-size="12">rule <tspan font-family="ui-monospace, Menlo, monospace" fill="#4a4a47">R-CHARITY-CASH</tspan></text>
+    <g font-family="ui-monospace, SFMono-Regular, Menlo, monospace" font-size="11">
+      <rect x="76" y="192" width="72" height="22" rx="3" fill="#eaf2f8" stroke="#cfe2ef"/><text x="112" y="207" text-anchor="middle" fill="#1f5c8b">ev-1047</text>
+      <rect x="158" y="192" width="72" height="22" rx="3" fill="#eaf2f8" stroke="#cfe2ef"/><text x="194" y="207" text-anchor="middle" fill="#1f5c8b">ev-1048</text>
+      <rect x="240" y="192" width="72" height="22" rx="3" fill="#fdf4e3" stroke="#f0e0bd"/><text x="276" y="207" text-anchor="middle" fill="#8a5a00">ev-1049</text>
+    </g>
+    <text x="276" y="232" text-anchor="middle" font-size="11" fill="#8a5a00">read at 0.41 confidence</text>
+    <text x="76" y="258" font-size="11" fill="#6b6b68">the engine cited these when it produced the figure</text>
+
+    <!-- WORK -->
+    <rect x="500" y="130" width="340" height="150" rx="4" fill="#ffffff" stroke="#e4e4e2"/>
+    <text x="516" y="150" font-size="11" font-weight="700" fill="#6b6b68" letter-spacing="0.6">WORK &#183; EVENTS, APPEND-ONLY</text>
+    <text x="516" y="176" font-size="12">question &#8594; answer &#8594; attached as evidence</text>
+    <g font-family="ui-monospace, SFMono-Regular, Menlo, monospace" font-size="11">
+      <rect x="516" y="190" width="104" height="22" rx="3" fill="#eaf2f8" stroke="#cfe2ef"/><text x="568" y="205" text-anchor="middle" fill="#1f5c8b">wp:59f8fde2</text>
+    </g>
+    <text x="516" y="234" font-size="12">verification <tspan fill="#4a4a47">confirmed_with_client</tspan></text>
+    <text x="516" y="256" font-size="12">sign-off  preparer &#183; reviewer <tspan font-size="11" fill="#6b6b68">(hash of what it covered)</tspan></text>
+
+    <!-- resolver band -->
+    <path d="M230,280 L230,322" fill="none" stroke="#4a4a47" stroke-width="1.2" marker-end="url(#a)"/>
+    <path d="M670,280 L670,322" fill="none" stroke="#4a4a47" stroke-width="1.2" marker-end="url(#a)"/>
+    <rect x="60" y="326" width="780" height="62" rx="4" fill="#ffffff" stroke="#1f5c8b" stroke-width="1.5"/>
+    <text x="450" y="350" text-anchor="middle" font-size="14" font-weight="600" font-family="ui-monospace, Menlo, monospace">resolveRef</text>
+    <text x="450" y="372" text-anchor="middle" font-size="12" fill="#6b6b68">
+      <tspan font-family="ui-monospace, Menlo, monospace">ev-1049</tspan> &#183;
+      <tspan font-family="ui-monospace, Menlo, monospace">D64</tspan> &#183;
+      <tspan font-family="ui-monospace, Menlo, monospace">py:/&#8230;</tspan> &#183;
+      <tspan font-family="ui-monospace, Menlo, monospace">ref:param.&#8230;</tspan> &#183;
+      <tspan font-family="ui-monospace, Menlo, monospace">wp:59f8&#8230;</tspan> &#8212; one grammar, one operation
+    </text>
+
+    <!-- outcomes -->
+    <path d="M230,388 L230,424" fill="none" stroke="#4a4a47" stroke-width="1.2" marker-end="url(#a)"/>
+    <path d="M670,388 L670,424" fill="none" stroke="#4a4a47" stroke-width="1.2" marker-end="url(#a)"/>
+
+    <rect x="60" y="428" width="340" height="104" rx="4" fill="#ffffff" stroke="#e4e4e2"/>
+    <text x="76" y="448" font-size="11" font-weight="700" fill="#6b6b68" letter-spacing="0.6">D64 &#183; PAGE 1, HIGHLIGHTED IN PLACE</text>
+    <text x="76" y="474" font-size="12" font-style="italic">&#8220;Received from the Okafor-Lindqvist family,</text>
+    <text x="76" y="492" font-size="12" font-style="italic">$?,500.00 &#8212; thank you.&#8221;</text>
+    <text x="76" y="516" font-size="11" fill="#8a5a00">the first digit could be 1 or 7, and 1,500 is not printed</text>
+
+    <rect x="500" y="428" width="340" height="104" rx="4" fill="#ffffff" stroke="#e4e4e2"/>
+    <text x="516" y="448" font-size="11" font-weight="700" fill="#6b6b68" letter-spacing="0.6">THE CLIENT&#8217;S ANSWER, BY PHONE</text>
+    <text x="516" y="474" font-size="12" font-style="italic">&#8220;St Brigid confirmed the gift was 1,500 &#8212;</text>
+    <text x="516" y="492" font-size="12" font-style="italic">matches our bank statement, check #2207.&#8221;</text>
+    <text x="516" y="516" font-size="11" fill="#6b6b68">Ngozi Okafor, recorded by Priya Raman</text>
+
+    <!-- the loop closes: the answer is what the receipt could not say -->
+    <path d="M670,532 L670,566 L230,566 L230,540" fill="none" stroke="#8a5a00" stroke-width="1.4"
+          stroke-dasharray="5 3" marker-end="url(#aw)"/>
+    <rect x="356" y="556" width="188" height="20" fill="#fbfbfa"/>
+    <text x="450" y="571" text-anchor="middle" font-size="11" fill="#8a5a00">resolves the ambiguous digit</text>
+  </g>
+</svg>

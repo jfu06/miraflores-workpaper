@@ -37,6 +37,14 @@ the verifications and review notes standing at the time. Nothing has to be told
 that a change happened. A change nobody anticipated still reopens the signature,
 because the mechanism does not depend on anticipating it.
 
+
+![](docs/one-number.svg)
+
+<sub>**Every number reaches its evidence two ways, and one resolver opens both.** The packet's
+facts are immutable; the workpaper's events only ever append. Both produce references in the same
+grammar, so a client's phoned-in answer opens exactly like a box on a Form W-2 — and here it is
+what resolves a receipt whose first digit the pipeline could not read.</sub>
+
 ## The data model
 
 **Fact layer** (`lib/graph/`) — read-only, indexed from the packet as delivered.
@@ -63,6 +71,14 @@ The recomputation is not assumed — for each line that is arithmetic over other
 lines, the combination reproducing the engine's published value is *solved for and
 verified against it*: 128 lines, all 128 exact, 19 of them subtracting, because
 `R-SUM` is documented as "arithmetic combination", not a sum.
+
+
+![](docs/four-kinds.svg)
+
+<sub>**An adjustment is carried as far as recovered arithmetic allows, and no further.** The engine
+cannot be rerun, so the combination behind each line is solved against the engine's own published
+figures and verified. Where it cannot be recovered, propagation stops and the lines beyond are
+reported as unknown rather than estimated into place.</sub>
 
 ## What it refuses to do
 
