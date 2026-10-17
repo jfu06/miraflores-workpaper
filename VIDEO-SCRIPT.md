@@ -41,6 +41,8 @@ to see. If no length was stated, record the full version.
   字幕按意群分屏，不是一句一屏 —— 像「engine / manual / recomputed / estimated」
   那种清单会整组出现，因为它们本来就该连着念。
 
+中英对照版在 [VIDEO-SCRIPT.zh.md](VIDEO-SCRIPT.zh.md) —— 念之前先过一遍中文。
+
 **Practise these once:**
 
 | | |
