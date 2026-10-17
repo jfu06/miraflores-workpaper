@@ -42,3 +42,4 @@ next-env.d.ts
 .tscheck/
 data/events.db*
 walkthrough.webm
+rehearsal.webm

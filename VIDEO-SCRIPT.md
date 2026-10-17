@@ -33,7 +33,11 @@ to see. If no length was stated, record the full version.
    点不动，已经修了：tab 现在会换行，1100px 起每个都点得到。）
 3. 先录两分钟废片，确认麦克风电平和字够不够清楚。
 
-先看一遍 `walkthrough.webm`（1 分 53 秒，带鼠标和字幕），把点击顺序记住再开录。
+两段排练视频（都不进 git，用 Chrome 打开）：
+
+- `walkthrough.webm` — 1 分 53 秒，只看「点哪里」，快速过一遍路线。
+- `rehearsal.webm` — 20 分 55 秒，**按 115 词/分钟的语速走**：点一下，底下出现
+  你要念的那句原话，橙色进度条走完才往下点。跟着念，跟得上就是对的节奏。
 
 **Practise these once:**
 
