@@ -335,7 +335,9 @@ to see. If no length was stated, record the full version.
 > all. And replay is read-only, because recording work against a past view is
 > writing history, not replaying it.
 
-**Do:** **Freeze and file federal**. Try to adjust a line. Then open an amendment.
+**Do:** switch the role picker to **Daniel Ortiz — reviewer** — a preparer cannot
+transmit a return, so filing as Priya returns a 403 — then **Freeze and file
+federal**. Try to adjust a line. Then open an amendment.
 
 > Filing snapshots all six hundred twenty-seven lines with a hash of them.
 >
