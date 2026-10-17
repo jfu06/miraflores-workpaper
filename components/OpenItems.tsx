@@ -145,6 +145,12 @@ interface Props {
 
 export function OpenItems({ data, onSelect, onOpenRef, onChanged }: Props) {
   const [showDismissed, setShowDismissed] = useState(false);
+  /**
+   * Low findings are hidden by default, because 78 of the 108 are unexplained
+   * prior-year variances and they bury everything else in their own family. The
+   * count is still shown, so nothing is hidden silently.
+   */
+  const [showLow, setShowLow] = useState(false);
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [busy, setBusy] = useState(false);
 
@@ -169,12 +175,16 @@ export function OpenItems({ data, onSelect, onOpenRef, onChanged }: Props) {
       (data?.findings ?? []).filter((f) => !dismissedIds.has(f.id) && !addressedIds.has(f.id)),
     [data, dismissedIds, addressedIds],
   );
+  const shown = useMemo(
+    () => (showLow ? live : live.filter((f) => f.severity !== "low")),
+    [live, showLow],
+  );
 
   if (!data) return <Section title="Open items">Loading…</Section>;
 
   const byFamily = new Map<CheckFamily, Finding[]>();
   const checkById = new Map(data.checks.map((c) => [c.id, c]));
-  for (const finding of live) {
+  for (const finding of shown) {
     const family = checkById.get(finding.checkId)?.family ?? "integrity";
     const list = byFamily.get(family);
     if (list) list.push(finding);
@@ -184,6 +194,7 @@ export function OpenItems({ data, onSelect, onOpenRef, onChanged }: Props) {
   const applicable = live.filter((f) => f.suggestedAdjustment);
   const high = live.filter((f) => f.severity === "high").length;
   const medium = live.filter((f) => f.severity === "medium").length;
+  const low = live.filter((f) => f.severity === "low").length;
 
   /**
    * Deliberately no total.
@@ -203,6 +214,14 @@ export function OpenItems({ data, onSelect, onOpenRef, onChanged }: Props) {
         <span className="text-muted">
           {" "}
           from {data.checks.length} checks · {high} high, {medium} medium
+          {low > 0 && (
+            <>
+              {", "}
+              <button onClick={() => setShowLow(!showLow)} className="underline">
+                {low} low {showLow ? "shown" : "hidden"}
+              </button>
+            </>
+          )}
           {addressedIds.size > 0 && ` · ${addressedIds.size} addressed`}
           {dismissedIds.size > 0 && (
             <>

@@ -3,9 +3,19 @@
 Target **12 minutes**; the cut points marked ✂ take it to 8 if needed. Record at
 1440 wide or more — the app is a three-pane review surface and needs the width.
 
-**Before recording:** `npm run dev`, delete `data/events.db*` for a clean start,
-then re-seed by replaying section 4 live on camera. Have `npm run checks` output
-in a second terminal.
+**Before recording:**
+
+```bash
+npm run seed -- --no-file     # the worked file, stopping short of filing
+```
+
+`--no-file` matters: the seed otherwise files and opens the amendment, and §9:30
+wants the freeze to happen on camera. Have `npm run checks` output in a second
+terminal.
+
+To start over, point `EVENTS_DB_PATH` at a new file (locally: delete
+`data/events.db*` **and restart the dev server** — the open handle survives the
+file). The log is append-only; there is no reset, only a new book.
 
 ---
 
@@ -118,7 +128,11 @@ Priya proposed it, so Priya can't approve it. ✂ (show the refusal, it's one cl
 
 `npm run checks` in the terminal: **18 checks, 108 findings**.
 
-Open items tab. Click **why this check** on the California sourcing finding:
+Open items tab. Low findings are hidden by default — 78 of the 108 are
+unexplained prior-year variances and they bury everything else. Say that, then
+click the count to show them and click it back.
+
+Click **why this check** on the California sourcing finding:
 
 > Every check states what it establishes *without trusting the engine*, and the
 > app shows that sentence beside the finding. "We checked this" should be
@@ -135,24 +149,32 @@ Point at the **addressed** section:
 
 ## 9:30 — Replay, freeze, amend
 
-Timeline tab. **Show here** on 2026-03-10.
+Timeline tab. **Show here** on **2026-03-12, "irs transcript pulled"**.
 
-Federal AGI reads **428,023**, 64 documents. March 20: **429,820**, 66. Live:
-445,590, 74.
+The banner turns amber, the header reads **engine version v1**, and the figures
+move with it: federal AGI **428,023** against **64 documents** and 625 lines.
+**Show here** on **2026-03-19, "return computed"** → v2, **429,820**, 66
+documents. Return to live → v3, 445,590, 74.
 
 > Moving the clock doesn't grey out later rows — documents that hadn't arrived
 > aren't in the index at all. And replay is read-only, because recording work
 > against a past view is writing history. (Try it; the write is refused.)
 
 Back to live → **freeze and file federal**: 627 lines snapshotted with a hash.
-Try to adjust → refused. Open an amendment → now it's allowed, on top.
+Try to adjust → refused. Open an amendment for the 1099-K double count → now it
+is allowed, on top of a return that stays as transmitted.
 
 ## 10:30 — Answering a notice, two years later
 
 After filing tab. **Letter 566, dated 2028-01-20.**
 
-Item 2 — Schedule C gross receipts. Scroll to **the firm's own checks on this
-item**:
+Item 1 — the donated car. The deduction was corrected to the Form 1098-C
+proceeds before filing, so the check that found it is marked **corrected** rather
+than left looking open.
+
+Item 2 — Schedule C gross receipts, filed at 163,700 and **amended since filing
+to 151,300**, which the record says on its face. Scroll to **the firm's own checks
+on this item**:
 
 > Form 1099-K 12,400 is added to books revenue it is already inside.
 
@@ -160,10 +182,6 @@ Walk the arithmetic once: books 151,300 + the whole 1099-K = 163,700, while the
 deposits detail says those card payments were already deposited into Sales — and
 independently, 142,000 of 1099-NEC plus 9,300 from clients who issue no form is
 books revenue to the dollar.
-
-Item 1 — the donated car, deducted at the client's "Kelley Blue Book said *about*
-6,000" while the Form 1098-C on the same document says the charity sold it for
-2,900.
 
 Then the decision to defend:
 

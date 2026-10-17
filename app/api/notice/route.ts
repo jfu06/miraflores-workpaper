@@ -69,6 +69,27 @@ export async function GET(request: Request) {
   const result = recompute(graph, appliedAdjustments(ledger), buildFormIndex(graph));
   const findings = allFindings(runChecks(graph, new Set()));
 
+  /**
+   * Findings the file has already answered.
+   *
+   * A record handed to an examiner has to say which of our own objections we
+   * acted on. Showing a corrected finding as though it still stood would be as
+   * misleading as hiding it.
+   */
+  const applied = appliedAdjustments(ledger);
+  const addressed = new Set(
+    findings
+      .filter((f) =>
+        f.suggestedAdjustment
+          ? applied.some(
+              (a) =>
+                a.lineKey === f.suggestedAdjustment!.lineKey && a.to === f.suggestedAdjustment!.to,
+            )
+          : false,
+      )
+      .map((f) => f.id),
+  );
+
   const itemLines = NOTICE_ITEM_LINES[id] ?? [];
 
   const items = (notice.items_under_examination ?? []).map((text, index) => {
@@ -139,7 +160,13 @@ export async function GET(request: Request) {
         /** What the firm's own checks said, including where they disagreed. */
         findings: findings
           .filter((f) => f.scope?.kind === "line" && f.scope.id === key)
-          .map((f) => ({ id: f.id, severity: f.severity, title: f.title, detail: f.detail })),
+          .map((f) => ({
+            id: f.id,
+            severity: f.severity,
+            title: f.title,
+            detail: f.detail,
+            addressed: addressed.has(f.id),
+          })),
       };
     });
 

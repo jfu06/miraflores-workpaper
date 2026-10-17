@@ -44,7 +44,13 @@ interface NoticeRecord {
       verifications: { type: string; by?: string; at: string; note?: string }[];
       questions: { question: string; askedOf: string; answer?: string; answeredBy?: string; channel?: string }[];
       signoffs: { level: string; by?: string; at: string; valid: boolean }[];
-      findings: { id: string; severity: string; title: string; detail: string }[];
+      findings: {
+        id: string;
+        severity: string;
+        title: string;
+        detail: string;
+        addressed: boolean;
+      }[];
     }[];
   }[];
 }
@@ -142,6 +148,11 @@ export function After({
                     <span className="min-w-0 flex-1 text-[12px] font-medium">{line.label}</span>
                     <span className="tnum shrink-0 text-[12px]">{formatValue(line.valueAsFiled)}</span>
                   </div>
+                  {line.valueNow !== line.valueAsFiled && (
+                    <p className="mt-0.5 text-[11px] text-warn">
+                      Amended since filing to {formatValue(line.valueNow)}.
+                    </p>
+                  )}
                   {line.ruleText && (
                     <p className="mt-0.5 text-[10px] text-muted">
                       {line.rule}: {line.ruleText}
@@ -155,8 +166,16 @@ export function After({
                       </p>
                       {line.findings.map((f) => (
                         <p key={f.id} className="mt-0.5 text-[11px]">
-                          <Chip tone={f.severity === "high" ? "bad" : "warn"}>{f.severity}</Chip>{" "}
+                          <Chip tone={f.addressed ? "accent" : f.severity === "high" ? "bad" : "warn"}>
+                            {f.addressed ? "corrected" : f.severity}
+                          </Chip>{" "}
                           {f.title}
+                          {f.addressed && (
+                            <span className="text-muted">
+                              {" "}
+                              — the figure was changed to what the other record holds.
+                            </span>
+                          )}
                         </p>
                       ))}
                     </div>
