@@ -10,6 +10,8 @@ import { OpenItems, type ChecksData } from "./OpenItems";
 import { Adjustments, type AdjustedData } from "./Adjustments";
 import { Season, type SeasonData } from "./Season";
 import { After } from "./After";
+import { Documents } from "./Documents";
+import { Sales } from "./Sales";
 import type { FilingState } from "@/lib/filing/state";
 import { Chip, Empty, PaneHeader, Section } from "./ui";
 
@@ -20,7 +22,16 @@ export interface Overview {
   explanations: { key: string; text: string; actorName: string; at: string }[];
 }
 
-type Tab = "summary" | "areas" | "variances" | "open" | "adjustments" | "timeline" | "after";
+type Tab =
+  | "summary"
+  | "areas"
+  | "documents"
+  | "sales"
+  | "variances"
+  | "open"
+  | "adjustments"
+  | "timeline"
+  | "after";
 
 /**
  * What a reviewer sees on opening the file.
@@ -80,7 +91,19 @@ export function OverviewPane({
         title="This return, against last year"
         right={
           <div className="flex rounded border border-edge p-0.5">
-            {(["summary", "areas", "variances", "open", "adjustments", "timeline", "after"] as Tab[]).map((t) => (
+            {(
+              [
+                "summary",
+                "areas",
+                "documents",
+                "sales",
+                "variances",
+                "open",
+                "adjustments",
+                "timeline",
+                "after",
+              ] as Tab[]
+            ).map((t) => (
               <button
                 key={t}
                 onClick={() => setTab(t)}
@@ -237,6 +260,10 @@ export function OverviewPane({
             </p>
           </Section>
         )}
+
+        {tab === "documents" && <Documents onOpenRef={onOpenRef} onSelect={onSelect} />}
+
+        {tab === "sales" && <Sales onSelect={onSelect} onOpenRef={onOpenRef} />}
 
         {tab === "timeline" && (
           <Season

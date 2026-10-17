@@ -160,12 +160,39 @@ export const stateSourcing: Check = {
       byLine.set(match[1], entry);
     }
 
+    /**
+     * A payroll record that states the state-taxable figure at the move date.
+     *
+     * The employer's own year-to-date line is better evidence than any
+     * apportionment this workpaper could compute, and where one is in the file
+     * the check quotes it rather than estimating.
+     */
+    const payrollAtMove = graph.documents
+      .filter((d) => d.document_type === "paystub")
+      .flatMap((d) =>
+        (graph.evsByDoc.get(d.id) ?? [])
+          .filter((ev) => /ytd_ca_wages|ytd_state_wages/.test(ev.field) && typeof ev.value === "number")
+          .map((ev) => ({ doc: d, ev })),
+      )
+      .find((x) => (graph.linesByEv.get(x.ev.id) ?? []).length === 0);
+
     for (const [lineNumber, entry] of byLine) {
       if (entry.total === undefined || entry.caAmount === undefined) continue;
       if (entry.total === 0 || entry.caAmount !== entry.total) continue;
 
       const key = `SchCA540NR.${lineNumber}.E`;
       const line = graph.lineByKey.get(key);
+      const isWages = /wages/i.test(entry.label);
+
+      const contradiction =
+        isWages && payrollAtMove
+          ? ` A payroll record already in the file contradicts it: ${payrollAtMove.doc.id}, "${payrollAtMove.doc.title}", states California taxable wages of ${money(
+              payrollAtMove.ev.value as number,
+            )} year to date at the move, and says the work location changed. It was read (${
+              payrollAtMove.ev.id
+            }) and no line cites it.`
+          : "";
+
       findings.push({
         id: `INT-STATE-SOURCE:${key}`,
         checkId: "INT-STATE-SOURCE",
@@ -175,8 +202,14 @@ export const stateSourcing: Check = {
           california!.from
         } to ${california!.to}, then Texas. Rule ${
           entry.rule
-        } produced the California amount; confirm it apportions rather than taking the figure whole.`,
-        refs: [key, `SchCA540NR.${lineNumber}.D`, ...(line?.sources ?? []).slice(0, 6), "qa-02"],
+        } produced the California amount; confirm it apportions rather than taking the figure whole.${contradiction}`,
+        refs: [
+          key,
+          `SchCA540NR.${lineNumber}.D`,
+          ...(isWages && payrollAtMove ? [payrollAtMove.ev.id, payrollAtMove.doc.id] : []),
+          ...(line?.sources ?? []).slice(0, 4),
+          "qa-02",
+        ],
         scope: { kind: "line", id: key },
         amount: entry.total,
       });

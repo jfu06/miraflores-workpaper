@@ -5,6 +5,7 @@ import {
   documentConflict,
   lowConfidence,
   supersededStillUsed,
+  unexplainedDocument,
   unreadPages,
   valueNotOnPage,
 } from "./evidence";
@@ -38,6 +39,7 @@ export const CHECKS: Check[] = [
   supersededStillUsed,
   detailSummaryTieOut,
   unreadPages,
+  unexplainedDocument,
   agencyReconciliation,
   schcGrossReceipts,
   noncashGiftValuation,

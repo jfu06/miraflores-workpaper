@@ -5,6 +5,7 @@
 
 import { locatePage } from "../graph/document";
 import type { ExtractedValue, PacketDocument } from "../packet/types";
+import { buildDocumentIndex } from "../view/documents";
 import type { Check, Finding } from "./types";
 
 const MONEY_TYPES = new Set(["money", "integer", "quantity"]);
@@ -367,5 +368,30 @@ export const unreadPages: Check = {
     }
 
     return findings;
+  },
+};
+
+export const unexplainedDocument: Check = {
+  id: "DOC-UNEXPLAINED",
+  title: "A document reaches no line and nothing says why",
+  family: "completeness",
+  rationale:
+    "'Prove completeness: every document used' is one of the things the workpaper has to do. A document the client sent, that the pipeline read, that no figure rests on and that nothing in the file accounts for, is either a missed inclusion or an unrecorded decision — and both are worth a sentence from someone.",
+  independent:
+    "Walks the reverse index from documents to lines and then tries every explanation the file itself can offer: superseded, not extracted, cited by the prior-year records, a duplicate of another copy, or evidence for a required step. What is left has no explanation.",
+  run({ graph }) {
+    return buildDocumentIndex(graph)
+      .filter((row) => row.notLanded?.kind === "unexplained")
+      .map((row) => ({
+        id: `DOC-UNEXPLAINED:${row.id}`,
+        checkId: "DOC-UNEXPLAINED",
+        severity: "medium" as const,
+        title: `${row.id} reaches no line on the return`,
+        detail: `${row.title}. ${row.documentType}, ${row.valueCount} values read, received ${row.receivedAt.slice(
+          0,
+          10,
+        )} from the ${row.uploadedBy}. ${row.notLanded!.detail}`,
+        refs: [row.id],
+      }));
   },
 };
