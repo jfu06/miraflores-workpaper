@@ -2,12 +2,21 @@
 
 A web-native tax workpaper built from the Miraflores packet.
 
+**Running:** <https://miraflores-workpaper-production-756f.up.railway.app>
+
+Open it and nothing is set up — that is the point. Pick a line, trace it, record
+a verification, raise a question, sign off, move the clock. Everything you do is
+saved; the role switcher is in the header.
+
 ```bash
 npm install
 npm run dev        # http://localhost:3000
 npm run checks     # 18 checks, 108 findings
 npm run verify     # every claim in this repo, re-run
 ```
+
+Deployment notes, including why this needs a disk rather than a serverless host,
+are in [DEPLOY.md](DEPLOY.md).
 
 The packet in `data/` is a byte-identical copy of the one delivered
 (`sha256 ee01f850…`). Nothing pre-compiles or rewrites it; `PACKET_PATH` points

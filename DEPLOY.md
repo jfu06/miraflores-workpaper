@@ -13,7 +13,22 @@ Verified locally before deploying: the image builds, serves 18 checks and 108
 findings, writes an event, and the event survives the container being destroyed
 and recreated against the same volume.
 
-## Railway
+## Live
+
+<https://miraflores-workpaper-production-756f.up.railway.app> — Railway, Dockerfile
+build, volume mounted at `/data`.
+
+Verified on the deployed service, not just locally: all endpoints answer, the app
+reports its own 18 checks and 108 findings, an event written through the API
+survived a redeploy onto a new container, and both of Letter 566's examined items
+carry a high-severity finding.
+
+One thing to know if you redeploy from a fresh clone: **Railway rejects a
+Dockerfile `VOLUME` instruction** outright — "not supported, use Railway Volumes"
+— and the build fails before anything runs. The mount is declared on the service
+instead.
+
+## Railway, from scratch
 
 1. **New Project → Deploy from GitHub repo**, pick `jfu06/miraflores-workpaper`.
    Railway reads `railway.json` and builds the Dockerfile; no settings needed.
