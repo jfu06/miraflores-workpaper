@@ -251,6 +251,23 @@ W-2 的第二张照片，所以只算一次。
 
 **中** 把意见撤回，签字就回来了——因为哈希回到了原来的值。
 
+**做：** 在 **Adjust** 里把数字改成 211,400，写个理由，点 **Adjust**。
+
+> Now the other half, and the one that matters. I'll change the figure itself.
+
+**中** 现在是另一半，也是真正要紧的那一半：我直接改这个数字本身。
+
+> Both reopen again — and this time because the number moved, not because the
+> paperwork around it did. The hash covers the value as adjusted, and the closure
+> runs all the way down, so signing total income signs the wages underneath it
+> too.
+
+**中** 两个签字又失效了——而这次是因为**数字动了**，不是因为它周围的文书动了。哈希
+覆盖的是调整之后的值，而且闭包一路向下，所以在「总收入」上签字，等于也在它下面的
+「工资」上签了字。
+
+**做：** 撤回这笔调整。
+
 > But look at the history. Two events struck through. Nothing deleted. The
 > database physically refuses updates and deletes — there are triggers that abort
 > them. Undo is a compensating event, not an erasure.
@@ -471,11 +488,26 @@ W-2 的第二张照片，所以只算一次。
 过去的视图上记录工作，那叫篡改历史，不叫回放。
 
 **做：** 把右上角角色切成 **Daniel Ortiz — reviewer**（报税员无权申报，用 Priya 会被
-拒绝），再点 **Freeze and file federal**。然后试着改一行，再打开修正申报。
+拒绝），然后先试着点 **Freeze and file california**。
 
-> Filing snapshots all six hundred twenty-seven lines with a hash of them.
+> California is refused, and read why. A blocking review note still stands
+> against it — the wage split from a moment ago. The firm's own standard stops
+> the transmission. It isn't a warning in the interface that a determined person
+> can click past.
 
-**中** 申报会把全部 627 行连同它们的哈希一起快照下来。
+**中** 加州被拒绝了，看它给的理由：有一条阻断性复核意见还挂在上面——就是刚才那个
+工资拆分。**事务所自己的标准挡住了这次报送**，而不是界面上一句点一下就能绕过去的
+警告。
+
+**做：** 再点 **Freeze and file federal**。
+
+> Federal has nothing standing against it, so federal goes. Filing snapshots all
+> six hundred twenty-seven lines with a hash of them.
+
+**中** 联邦这边没有任何东西挡着，所以联邦报得出去。申报会把全部 627 行连同它们的
+哈希一起快照下来。
+
+**做：** 试着改一行，再打开修正申报。
 
 > Now try to adjust something. Refused. Open an amendment — now it's allowed, on
 > top of a return that stays exactly as transmitted.

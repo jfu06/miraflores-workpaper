@@ -285,6 +285,7 @@ export function NumberPanel({
             lineKey={detail.key}
             currentValue={moved ? moved.value : detail.value}
             defaultCategory={detail.defaultCategory}
+            entries={(adjusted?.ledger ?? []).filter((e) => e.lineKey === detail.key)}
             onChanged={onWorkChanged}
           />
         )}

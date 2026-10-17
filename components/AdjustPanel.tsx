@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useState } from "react";
 
 import { CATEGORY_LABEL, type EffectCategory, type TaxEffect } from "@/lib/adjust/effect";
+import type { LedgerEntry } from "@/lib/adjust/ledger";
 import type { Provenance } from "@/lib/adjust/recompute";
 import { appendEvent } from "@/lib/view/client";
 import { formatMoney } from "@/lib/view/format";
@@ -31,12 +32,15 @@ export function AdjustPanel({
   lineKey,
   currentValue,
   defaultCategory,
+  entries = [],
   onChanged,
 }: {
   lineKey: string;
   currentValue: number;
   /** The category this line's change belongs to, so the control opens on the right one. */
   defaultCategory: string | null;
+  /** The adjustments standing on this line, so they can be withdrawn here. */
+  entries?: LedgerEntry[];
   onChanged: () => void;
 }) {
   const [to, setTo] = useState("");
@@ -196,6 +200,55 @@ export function AdjustPanel({
       >
         {preview?.requiresPartner ? "Propose adjustment" : "Adjust"}
       </button>
+
+      {/*
+        An adjustment is withdrawn the way every other entry is: a compensating
+        event, recorded. Until this was here the ledger offered that only for a
+        group, so a single adjustment — the ordinary case — could not be undone
+        at all, which is not what the rest of the file says about undo.
+      */}
+      {entries.length > 0 && (
+        <ul className="mt-2 space-y-1 border-t border-edge pt-2">
+          {entries.map((entry) => (
+            <li key={entry.eventId} className="flex items-baseline gap-2 text-[11px]">
+              <Chip tone={entry.applied ? "accent" : "warn"}>
+                {entry.applied ? "applied" : "awaiting a partner"}
+              </Chip>
+              <span className="tnum shrink-0">
+                {formatMoney(entry.from)} &rarr; {formatMoney(entry.to)}
+              </span>
+              <span className="min-w-0 flex-1 truncate text-muted">
+                {entry.actorName} · {entry.reason}
+              </span>
+              <button
+                disabled={busy}
+                onClick={async () => {
+                  setBusy(true);
+                  setError(null);
+                  try {
+                    await appendEvent({
+                      type: "revert",
+                      scope: { kind: "line", id: lineKey },
+                      payload: { targetEventId: entry.eventId, reason: "Adjustment withdrawn." },
+                    });
+                    onChanged();
+                  } catch (err) {
+                    // The server refuses a withdrawal that is not the actor's to
+                    // make, or that would change a filed return; say which.
+                    setError(err instanceof Error ? err.message : String(err));
+                  } finally {
+                    setBusy(false);
+                  }
+                }}
+                className="shrink-0 text-[10px] text-muted transition hover:text-bad disabled:opacity-40"
+                title="Withdraw this adjustment. The entry stays in the history."
+              >
+                withdraw
+              </button>
+            </li>
+          ))}
+        </ul>
+      )}
     </Section>
   );
 }

@@ -4,7 +4,7 @@ The lines to say out loud, with the clicks beside them. **Don't read it flat** �
 it's a safety net, not a teleprompter. If you lose your place, the bold heading
 tells you which screen you're on.
 
-**1,912 words of speech — about 18 minutes** with the clicking. The timestamp on
+**2,021 words of speech — about 19 minutes** with the clicking. The timestamp on
 each heading is your clock: if you're a minute ahead or behind there, adjust.
 Word counts are per section so you can trade.
 
@@ -13,7 +13,7 @@ Word counts are per section so you can trade.
 
 **If you need it shorter.** Drop in this order, and stop when you're under:
 
-1. the three **✂** sections (−3:30, lands at ~14:45)
+1. the three **✂** sections (−2:57, lands at ~15:39)
 2. *Overview and areas* (−1:00) — the Summary screen is visible behind the first beat anyway
 3. *Replay, freeze, amend* (−1:10) — the weakest to lose, since the brief asks for it
 
@@ -182,7 +182,7 @@ to see. If no length was stated, record the full version.
 
 ---
 
-## 5:43 — A signature that reopens itself · 157 words
+## 5:43 — A signature that reopens itself · 214 words
 
 **Do:** back to **Wages, box 1**. Point at the two green sign-offs.
 
@@ -205,7 +205,19 @@ to see. If no length was stated, record the full version.
 **Do:** click **withdraw**.
 
 > Withdraw the note and they come back, because the hash returns to what it was.
+
+**Do:** in **Adjust**, set the figure to 211,400 with a reason, and click
+**Adjust**.
+
+> Now the other half, and the one that matters. I'll change the figure itself.
 >
+> Both reopen again — and this time because the number moved, not because the
+> paperwork around it did. The hash covers the value as adjusted, and the closure
+> runs all the way down, so signing total income signs the wages underneath it
+> too.
+
+**Do:** withdraw the adjustment.
+
 > But look at the history. Two events struck through. Nothing deleted. The
 > database physically refuses updates and deletes — there are triggers that abort
 > them. Undo is a compensating event, not an erasure.
@@ -214,7 +226,7 @@ to see. If no length was stated, record the full version.
 
 ---
 
-## 7:12 — The four kinds of number · 195 words
+## 7:40 — The four kinds of number · 195 words
 
 **Do:** **← Overview**, then **Adjustments**.
 
@@ -249,7 +261,7 @@ to see. If no length was stated, record the full version.
 
 ---
 
-## 8:59 — Every document, and where it went · 184 words  ✂
+## 9:28 — Every document, and where it went · 184 words  ✂
 
 **Do:** **Documents** tab, then **Unexplained 4**.
 
@@ -281,7 +293,7 @@ to see. If no length was stated, record the full version.
 
 ---
 
-## 10:41 — Two hundred ninety-five lots, without reading them · 83 words  ✂
+## 11:10 — Two hundred ninety-five lots, without reading them · 83 words  ✂
 
 **Do:** **Sales** tab.
 
@@ -300,7 +312,7 @@ to see. If no length was stated, record the full version.
 
 ---
 
-## 11:33 — What "we checked this" means · 125 words
+## 12:01 — What "we checked this" means · 125 words
 
 **Do:** terminal, `npm run checks`. Then **Open items**.
 
@@ -327,7 +339,7 @@ to see. If no length was stated, record the full version.
 
 ---
 
-## 12:45 — Replay, freeze, amend · 123 words
+## 13:14 — Replay, freeze, amend · 175 words
 
 **Do:** **Timeline**, click **show here** on 2026-03-12.
 
@@ -346,17 +358,27 @@ to see. If no length was stated, record the full version.
 > writing history, not replaying it.
 
 **Do:** switch the role picker to **Daniel Ortiz — reviewer** — a preparer cannot
-transmit a return, so filing as Priya returns a 403 — then **Freeze and file
-federal**. Try to adjust a line. Then open an amendment.
+transmit a return, so filing as Priya returns a 403 — then try **Freeze and file
+california**.
 
-> Filing snapshots all six hundred twenty-seven lines with a hash of them.
->
+> California is refused, and read why. A blocking review note still stands
+> against it — the wage split from a moment ago. The firm's own standard stops
+> the transmission. It isn't a warning in the interface that a determined person
+> can click past.
+
+**Do:** **Freeze and file federal**.
+
+> Federal has nothing standing against it, so federal goes. Filing snapshots all
+> six hundred twenty-seven lines with a hash of them.
+
+**Do:** try to adjust a line, then open an amendment.
+
 > Now try to adjust something. Refused. Open an amendment — now it's allowed, on
 > top of a return that stays exactly as transmitted.
 
 ---
 
-## 13:57 — Answering a notice, two years later · 177 words
+## 14:51 — Answering a notice, two years later · 177 words
 
 **Do:** **After filing** tab.
 
@@ -392,7 +414,7 @@ federal**. Try to adjust a line. Then open an amendment.
 
 ---
 
-## 15:35 — What I'd defend, and what I'd do next · 148 words
+## 16:30 — What I'd defend, and what I'd do next · 148 words
 
 > Four tradeoffs I'd want you to push on.
 >
@@ -414,7 +436,7 @@ federal**. Try to adjust a line. Then open an amendment.
 
 ---
 
-## 16:59 — How I used AI · 133 words
+## 17:54 — How I used AI · 133 words
 
 > Last thing, since you asked.
 >

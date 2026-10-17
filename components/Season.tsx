@@ -52,6 +52,12 @@ export function Season({
   onOpenRef: (ref: string) => void;
 }) {
   const [busy, setBusy] = useState(false);
+  /**
+   * What the server said when it refused. A transmission can be refused for a
+   * reason the reviewer has to act on — a blocking review note still standing —
+   * and saying nothing would leave the button looking broken instead.
+   */
+  const [refusal, setRefusal] = useState<string | null>(null);
 
   const moveTo = useCallback(
     async (asOf: string | null) => {
@@ -117,6 +123,7 @@ export function Season({
                       disabled={busy || !live}
                       onClick={async () => {
                         setBusy(true);
+                        setRefusal(null);
                         try {
                           await appendEvent({
                             type: "filing",
@@ -128,6 +135,8 @@ export function Season({
                             },
                           });
                           onChanged();
+                        } catch (err) {
+                          setRefusal(err instanceof Error ? err.message : String(err));
                         } finally {
                           setBusy(false);
                         }
@@ -139,6 +148,11 @@ export function Season({
                   );
                 })}
               </div>
+              {refusal && (
+                <p className="mt-2 rounded border border-[#e7c9c9] bg-[#fdf3f3] px-2 py-1.5 text-[11px] text-bad">
+                  {refusal}
+                </p>
+              )}
             </>
           ) : (
             <>
