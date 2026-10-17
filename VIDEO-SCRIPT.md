@@ -36,8 +36,10 @@ to see. If no length was stated, record the full version.
 两段排练视频（都不进 git，用 Chrome 打开）：
 
 - `walkthrough.webm` — 1 分 53 秒，只看「点哪里」，快速过一遍路线。
-- `rehearsal.webm` — 20 分 55 秒，**按 115 词/分钟的语速走**：点一下，底下出现
+- `rehearsal.webm` — 19 分 22 秒，**按 115 词/分钟的语速走**：点一下，底下出现
   你要念的那句原话，橙色进度条走完才往下点。跟着念，跟得上就是对的节奏。
+  字幕按意群分屏，不是一句一屏 —— 像「engine / manual / recomputed / estimated」
+  那种清单会整组出现，因为它们本来就该连着念。
 
 **Practise these once:**
 
