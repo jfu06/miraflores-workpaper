@@ -105,9 +105,22 @@ export function defaultCategory(line: ReturnLine): EffectCategory | null {
 
   if (form === "SchA") return /state|local|property|sales tax/i.test(label) ? "salt" : "itemized";
   if (form === "Sch1") return "adjustment";
-  if (form === "SchE" || form === "F8582" || form === "F4797" || form === "F7203") {
+  if (
+    form === "SchE" ||
+    form === "F8582" ||
+    form === "F4797" ||
+    form === "F7203" ||
+    // Rental depreciation lands in Schedule E, so it moves the same way.
+    form === "F4562-E"
+  ) {
     return "ordinary_income";
   }
+
+  // Noncash charitable gifts feed Schedule A line 12.
+  if (form === "F8283") return "itemized";
+
+  // Schedule 2 holds additional taxes, which move total tax one for one.
+  if (form === "Sch2") return "direct";
 
   if (form === "F1040") {
     if (number.startsWith("1")) return "wages";
@@ -117,6 +130,16 @@ export function defaultCategory(line: ReturnLine): EffectCategory | null {
 
   if (form === "Sch3" || form === "F8812" || form === "F8863" || form === "F2441") return "direct";
 
+  /**
+   * Everything else returns null on purpose, and the UI asks.
+   *
+   * On `F6251`, `F8606`, `F8889`, `F8959` and `F8960` the same form carries both
+   * a base and a tax — `F8959.1` is Medicare wages, `F8959.17` is the tax on them
+   * — so a form-wide default would be right on some lines and silently wrong on
+   * others. `F8938` has no tax effect at all, and the `.A` columns of Schedule CA
+   * are the federal figures carried across, which is not where a change belongs.
+   * A default that is wrong half the time is worse than asking.
+   */
   return null;
 }
 
