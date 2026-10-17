@@ -90,7 +90,7 @@ export function OverviewPane({
         eyebrow="Overview"
         title="This return, against last year"
         right={
-          <div className="flex rounded border border-edge p-0.5">
+          <div className="flex flex-wrap justify-end rounded border border-edge p-0.5">
             {(
               [
                 "summary",

@@ -213,7 +213,7 @@ export function Workpaper({ meta, outline, clock }: Props) {
       </header>
 
       <main className="grid min-h-0 flex-1 grid-cols-[minmax(300px,340px)_minmax(0,1fr)_minmax(0,1.15fr)] divide-x divide-edge">
-        <div className="min-h-0 bg-surface">
+        <div className="min-h-0 min-w-0 bg-surface">
           <ReturnOutline
             outline={outline}
             selectedKey={selectedKey}
@@ -224,7 +224,7 @@ export function Workpaper({ meta, outline, clock }: Props) {
             adjustedLines={adjusted?.lines ?? []}
           />
         </div>
-        <div className="min-h-0 bg-surface">
+        <div className="min-h-0 min-w-0 bg-surface">
           {selectedKey === null ? (
             <OverviewPane
               data={overview}
@@ -249,7 +249,7 @@ export function Workpaper({ meta, outline, clock }: Props) {
             />
           )}
         </div>
-        <div className="min-h-0 bg-surface">
+        <div className="min-h-0 min-w-0 bg-surface">
           <EvidencePane
             key={`doc-${revision}`}
             request={docRequest}

@@ -45,7 +45,7 @@ export function PaneHeader({
         )}
         <div className="truncate text-[13px] font-semibold">{title}</div>
       </div>
-      {right && <div className="flex shrink-0 items-center gap-1.5">{right}</div>}
+      {right && <div className="flex min-w-0 flex-wrap items-center justify-end gap-1.5">{right}</div>}
     </div>
   );
 }

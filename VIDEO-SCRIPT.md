@@ -28,9 +28,9 @@ to see. If no length was stated, record the full version.
    npm run seed -- --no-file
    ```
 
-2. **浏览器窗口至少 1900px 宽。** 这是硬要求，不是建议：1600px 时
-   **After filing 这个 tab 会被右边 Evidence 栏盖住，点不动**（元素在，但
-   `elementFromPoint` 命中的是 Evidence）。1900 以上正常。
+2. 浏览器拉到 **1600px 以上**，110% 缩放。这是为了清晰度 —— 正文 13px，
+   1080p 下会发虚。（原本 1600px 时 After filing 那个 tab 会被 Evidence 栏盖住
+   点不动，已经修了：tab 现在会换行，1100px 起每个都点得到。）
 3. 先录两分钟废片，确认麦克风电平和字够不够清楚。
 
 先看一遍 `walkthrough.webm`（1 分 53 秒，带鼠标和字幕），把点击顺序记住再开录。
