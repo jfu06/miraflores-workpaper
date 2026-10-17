@@ -1,5 +1,6 @@
 import { createHash } from "node:crypto";
 
+import type { AdjustedValues } from "../adjust/values";
 import { parseRef } from "../graph/refs";
 import type { FactGraph } from "../graph/graph";
 import type { Scope, WorkpaperEvent } from "./types";
@@ -17,8 +18,15 @@ import type { Scope, WorkpaperEvent } from "./types";
  *
  *   - **Facts, transitively.** A line's own value and rule, plus every line it is
  *     built from, all the way down, plus the extracted values underneath. Signing
- *     Form 1040 line 11 means signing the arithmetic beneath it, so a changed
- *     W-2 box reopens it.
+ *     Form 1040 line 11 means signing the arithmetic beneath it, so adjusting the
+ *     taxable interest it is built from reopens it.
+ *
+ *     The value hashed is the value as adjusted, not the engine's. The packet is
+ *     immutable, so an adjustment is the only way a figure can move at all; a
+ *     hash taken over engine values would be constant for the life of the file
+ *     and the fact half of this mechanism would do nothing. `adjusted` is
+ *     required rather than optional for the same reason — a call site that
+ *     forgot it would silently restore that.
  *
  *   - **Work, for this scope only.** The verifications and review notes on the
  *     signed line itself. Deliberately not transitive: a sign-off attests to this
@@ -58,7 +66,11 @@ export interface CoveredFacts {
  * Walks `inputs` depth-first with a visited set, so the shared subtotals every
  * branch leads back to are collected once and cycles cannot loop.
  */
-export function coveredFacts(graph: FactGraph, scope: Scope): CoveredFacts {
+export function coveredFacts(
+  graph: FactGraph,
+  scope: Scope,
+  adjusted: AdjustedValues,
+): CoveredFacts {
   const lines = new Map<string, { key: string; value: string | number; rule: string }>();
   const values = new Map<string, { id: string; value: string | number | boolean }>();
   const otherRefs = new Set<string>();
@@ -67,7 +79,7 @@ export function coveredFacts(graph: FactGraph, scope: Scope): CoveredFacts {
     if (lines.has(key)) return;
     const line = graph.lineByKey.get(key);
     if (!line) return;
-    lines.set(key, { key: line.key, value: line.value, rule: line.rule });
+    lines.set(key, { key: line.key, value: adjusted.get(key) ?? line.value, rule: line.rule });
 
     for (const ref of line.sources) {
       const parsed = parseRef(ref);
@@ -100,7 +112,11 @@ export function coveredFacts(graph: FactGraph, scope: Scope): CoveredFacts {
     }
     case "return": {
       for (const line of graph.current.lines) {
-        lines.set(line.key, { key: line.key, value: line.value, rule: line.rule });
+        lines.set(line.key, {
+          key: line.key,
+          value: adjusted.get(line.key) ?? line.value,
+          rule: line.rule,
+        });
       }
       break;
     }
@@ -136,8 +152,9 @@ export function contentHash(
   graph: FactGraph,
   scope: Scope,
   liveEvents: WorkpaperEvent[],
+  adjusted: AdjustedValues,
 ): HashResult {
-  const facts = coveredFacts(graph, scope);
+  const facts = coveredFacts(graph, scope, adjusted);
   const workEventIds = liveEvents
     .filter((e) => HASH_RELEVANT.has(e.type))
     .map((e) => e.id)

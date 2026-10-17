@@ -3,6 +3,8 @@ import { NextResponse } from "next/server";
 import { actorIndex, getActor } from "@/lib/auth/actor";
 import { canSignOff, deriveScope } from "@/lib/events/derive";
 import { REVIEW_LEVELS, type Scope, type ScopeKind } from "@/lib/events/types";
+import { adjustedLineValues } from "@/lib/adjust/values";
+import { listAll } from "@/lib/events/store";
 import { buildGraph } from "@/lib/graph/graph";
 import { loadPacket } from "@/lib/packet/load";
 import { getClock } from "@/lib/time/server";
@@ -29,7 +31,8 @@ export async function GET(request: Request) {
   const actor = await getActor(packet);
   const scope: Scope = { kind, id };
 
-  const derived = deriveScope(graph, scope, actorIndex(packet));
+  const events = listAll(10_000);
+  const derived = deriveScope(graph, scope, actorIndex(packet), adjustedLineValues(graph, events));
 
   return NextResponse.json({
     ...derived,

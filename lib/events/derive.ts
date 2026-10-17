@@ -1,4 +1,5 @@
 import type { FactGraph } from "../graph/graph";
+import type { AdjustedValues } from "../adjust/values";
 import { contentHash, type CoveredFacts } from "./hash";
 import {
   listForScope,
@@ -163,6 +164,7 @@ export function deriveScope(
   graph: FactGraph,
   scope: Scope,
   actors: Map<string, ActorInfo>,
+  adjusted: AdjustedValues,
 ): DerivedScope {
   const history = listForScope(scope);
 
@@ -280,7 +282,7 @@ export function deriveScope(
     }
   }
 
-  const { hash: currentHash, facts, workEventIds } = contentHash(graph, scope, live);
+  const { hash: currentHash, facts, workEventIds } = contentHash(graph, scope, live, adjusted);
 
   const signoffs: SignoffView[] = live
     .filter((e) => e.type === "signoff")

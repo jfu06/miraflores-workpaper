@@ -67,6 +67,8 @@ export async function GET(request: Request) {
   const ledger = buildLedger(events, (n) => names.get(n) ?? n);
   const filing = buildFilingState(events, (n) => names.get(n) ?? n);
   const result = recompute(graph, appliedAdjustments(ledger), buildFormIndex(graph));
+  /** The figures as they stand now, for the sign-off hashes below. */
+  const adjustedValues = new Map([...result.lines].map(([key, line]) => [key, line.value]));
   const findings = allFindings(runChecks(graph, new Set()));
 
   /**
@@ -99,7 +101,7 @@ export async function GET(request: Request) {
       const line = graph.lineByKey.get(key)!;
       const adjusted = result.lines.get(key);
       const filedValue = filing.filings[0]?.snapshot[key];
-      const scope = deriveScope(graph, { kind: "line", id: key }, actors);
+      const scope = deriveScope(graph, { kind: "line", id: key }, actors, adjustedValues);
 
       /** Each source opened out: the page, the field, and what was printed there. */
       const evidence = line.sources.map((ref) => {

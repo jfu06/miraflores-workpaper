@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 
 import { actorIndex, getActor } from "@/lib/auth/actor";
 import { canSignOff, deriveScope } from "@/lib/events/derive";
+import { adjustedLineValues } from "@/lib/adjust/values";
 import { contentHash } from "@/lib/events/hash";
 import { append, getById, listAll } from "@/lib/events/store";
 import type {
@@ -16,7 +17,13 @@ import { REVIEW_LEVELS, VERIFICATION_TYPES } from "@/lib/events/types";
 import { computeEffect, defaultCategory, requiresPartnerSignoff, type EffectCategory } from "@/lib/adjust/effect";
 import { appliedAdjustments, buildLedger } from "@/lib/adjust/ledger";
 import { buildFormIndex, recompute } from "@/lib/adjust/recompute";
-import { buildFilingState, buildSnapshot, canAdjust } from "@/lib/filing/state";
+import {
+  buildFilingState,
+  buildSnapshot,
+  canAdjust,
+  canFile,
+  openBlockingNotes,
+} from "@/lib/filing/state";
 import { createHash } from "node:crypto";
 import { buildLookup } from "@/lib/events/lookup";
 import type {
@@ -115,12 +122,21 @@ export async function POST(request: Request) {
         ...packet.firm.staff.map((s) => [s.id, s.name] as const),
         ...packet.firm.client_users.map((c) => [c.id, c.name] as const),
       ]);
-      const ledger = buildLedger(listAll(10_000), (id) => names.get(id) ?? id);
-      const state = buildFilingState(listAll(10_000), (id) => names.get(id) ?? id);
+      const all = listAll(10_000);
+      const ledger = buildLedger(all, (id) => names.get(id) ?? id);
+      const state = buildFilingState(all, (id) => names.get(id) ?? id);
 
-      if (state.filedJurisdictions.includes(jurisdiction)) {
-        return bad(`The ${jurisdiction} return has already been filed.`);
-      }
+      /**
+       * The firm's own standards stop a transmission, not just the UI. A
+       * blocking review note is documented as stopping filing, so it does.
+       */
+      const blocking = openBlockingNotes(
+        all,
+        (id) => names.get(id) ?? id,
+        (lineKey) => graph.lineByKey.get(lineKey)?.jurisdiction,
+      );
+      const allowed = canFile(state, blocking, jurisdiction);
+      if (!allowed.ok) return bad(allowed.reason!, 409);
 
       const result = recompute(graph, appliedAdjustments(ledger), buildFormIndex(graph));
       const snapshot = buildSnapshot(graph, result.lines);
@@ -342,12 +358,13 @@ export async function POST(request: Request) {
       const level = body.payload?.level as ReviewLevel;
       if (!REVIEW_LEVELS.includes(level)) return bad(`Unknown review level: ${level}`);
 
-      const derived = deriveScope(graph, body.scope, actorIndex(packet));
+      const adjusted = adjustedLineValues(graph, listAll(10_000));
+      const derived = deriveScope(graph, body.scope, actorIndex(packet), adjusted);
       const check = canSignOff(derived, actor, level);
       if (!check.ok) return bad(check.reason ?? "Not permitted", 403);
 
       // The server decides what is being signed.
-      const { hash, facts, workEventIds } = contentHash(graph, body.scope, derived.live);
+      const { hash, facts, workEventIds } = contentHash(graph, body.scope, derived.live, adjusted);
       const payload: SignoffPayload = { level, contentHash: hash, facts, workEventIds };
 
       return NextResponse.json({

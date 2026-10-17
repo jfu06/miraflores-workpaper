@@ -14,7 +14,13 @@
 
 import type { FactGraph } from "../graph/graph";
 import type { WorkpaperEvent } from "../events/types";
-import type { AmendmentPayload, FilingPayload, RevertPayload } from "../events/types";
+import type {
+  AmendmentPayload,
+  FilingPayload,
+  RevertPayload,
+  ReviewNotePayload,
+  ReviewNoteResolvedPayload,
+} from "../events/types";
 import type { LedgerEntry } from "../adjust/ledger";
 
 export interface FilingRecord {
@@ -157,3 +163,103 @@ export function amendedSince(
 }
 
 export type { LedgerEntry };
+
+export interface OpenBlockingNote {
+  eventId: string;
+  text: string;
+  at: string;
+  raisedBy: string;
+  scopeKind: string;
+  scopeId: string;
+  /**
+   * The return this note bears on, where it can be told. A note whose scope is
+   * not a line of one jurisdiction has none, and then it bears on every filing.
+   */
+  jurisdiction?: string;
+}
+
+/**
+ * The blocking review notes still standing.
+ *
+ * A note is open until it is resolved; reverting either the note or its
+ * resolution is handled the same way as everywhere else, by folding reverts
+ * first and reading what is left.
+ */
+export function openBlockingNotes(
+  events: WorkpaperEvent[],
+  actorName: (id: string) => string,
+  jurisdictionOf: (lineKey: string) => string | undefined,
+): OpenBlockingNote[] {
+  const reverted = new Set<string>();
+  for (const event of events) {
+    if (event.type === "revert") {
+      reverted.add((event.payload as RevertPayload).targetEventId);
+      reverted.add(event.id);
+    }
+  }
+
+  const live = events.filter((e) => !reverted.has(e.id));
+  const resolved = new Set(
+    live
+      .filter((e) => e.type === "review_note_resolved")
+      .map((e) => (e.payload as ReviewNoteResolvedPayload).targetEventId),
+  );
+
+  return live
+    .filter(
+      (e) =>
+        e.type === "review_note" &&
+        (e.payload as ReviewNotePayload).blocking &&
+        !resolved.has(e.id),
+    )
+    .map((event) => {
+      const p = event.payload as ReviewNotePayload;
+      return {
+        eventId: event.id,
+        text: p.text,
+        at: event.at,
+        raisedBy: actorName(event.actorId),
+        scopeKind: event.scope.kind,
+        scopeId: event.scope.id,
+        jurisdiction: event.scope.kind === "line" ? jurisdictionOf(event.scope.id) : undefined,
+      };
+    });
+}
+
+/**
+ * Whether a return may be transmitted now.
+ *
+ * `ReviewNotePayload.blocking` has always been documented as stopping filing;
+ * until this existed, nothing enforced it, and a return could be transmitted
+ * with the firm's own blocking notes still open. The rule is deliberately
+ * fail-closed: a note bears on the jurisdiction of the line it was raised on,
+ * and a note whose jurisdiction cannot be determined — one raised on a document,
+ * an extracted value, or the return as a whole — stops every filing, because
+ * nothing in the record says it is unrelated to this one.
+ */
+export function canFile(
+  state: FilingState,
+  notes: OpenBlockingNote[],
+  jurisdiction: string,
+): { ok: boolean; reason?: string; blockedBy?: OpenBlockingNote[] } {
+  if (state.filedJurisdictions.includes(jurisdiction)) {
+    return { ok: false, reason: `The ${jurisdiction} return has already been filed.` };
+  }
+
+  const bearing = notes.filter((n) => n.jurisdiction === undefined || n.jurisdiction === jurisdiction);
+  if (bearing.length === 0) return { ok: true };
+
+  const first = bearing[0];
+  const rest = bearing.length - 1;
+  return {
+    ok: false,
+    blockedBy: bearing,
+    reason:
+      `${bearing.length} blocking review note${bearing.length === 1 ? "" : "s"} ` +
+      `still stand${bearing.length === 1 ? "s" : ""} against the ${jurisdiction} return: ` +
+      `"${first.text}" (${first.scopeId}, ${first.raisedBy})` +
+      `${rest > 0 ? ` and ${rest} more` : ""}. Resolve ${
+        bearing.length === 1 ? "it" : "them"
+      } or withdraw ${bearing.length === 1 ? "it" : "them"} before filing.`,
+  };
+}

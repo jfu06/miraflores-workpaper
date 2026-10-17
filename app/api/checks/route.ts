@@ -6,6 +6,7 @@ import { deriveScope } from "@/lib/events/derive";
 import { listAll } from "@/lib/events/store";
 import type { FindingDismissedPayload, RevertPayload } from "@/lib/events/types";
 import { allFindings, runChecks } from "@/lib/checks/run";
+import { adjustedLineValues } from "@/lib/adjust/values";
 import { buildGraph } from "@/lib/graph/graph";
 import { loadPacket } from "@/lib/packet/load";
 import { getClock } from "@/lib/time/server";
@@ -115,6 +116,7 @@ export async function GET() {
     graph,
     { kind: "return", id: String(packet.household.tax_year) },
     actorIndex(packet),
+    adjustedLineValues(graph, events),
   );
 
   return NextResponse.json({
