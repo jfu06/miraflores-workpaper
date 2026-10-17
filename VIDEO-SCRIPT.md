@@ -157,6 +157,8 @@ to see. If no length was stated, record the full version.
 
 **Do:** filter `gifts by cash`, click the line.
 
+**Do:** click **ev-1049** — the handwritten receipt itself, read at 0.41.
+
 > The brief asks for questions to the client that become evidence. The second
 > half is the part that needed a decision.
 >
