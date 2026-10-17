@@ -30,8 +30,9 @@ COPY --from=build /app/.next/static ./.next/static
 COPY --from=build /app/public ./public
 COPY --from=build /app/data/okafor_lindqvist_2025_packet.json ./data/
 
+# The directory has to exist for the first boot before a volume is attached.
+# No `VOLUME` instruction: Railway manages the mount itself and rejects one here.
 RUN mkdir -p /data
-VOLUME /data
 
 EXPOSE 3000
 ENV PORT=3000
