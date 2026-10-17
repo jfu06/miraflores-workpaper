@@ -199,7 +199,7 @@ cross-reads for itself, and the app shows that sentence next to every finding, s
 "we checked this" is a claim a reviewer can inspect rather than take on faith.
 
 ```bash
-npm run checks     # 19 checks, 112 findings — 17 high, 57 medium, 34 low
+npm run checks     # 19 checks, 112 findings — 17 high, 61 medium, 34 low
 ```
 
 They never read the event log. A finding cannot be made to disappear by doing

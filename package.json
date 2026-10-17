@@ -9,7 +9,9 @@
     "checks": "tsc --outDir .tscheck --module commonjs --target es2022 --moduleResolution node --strict --skipLibCheck --esModuleInterop lib/graph/refs.ts lib/graph/graph.ts lib/graph/document.ts lib/view/variance.ts lib/view/areas.ts lib/checks/run.ts scripts/check-suite.ts && node .tscheck/scripts/check-suite.js",
     "verify": "tsc --outDir .tscheck --module commonjs --target es2022 --moduleResolution node --strict --skipLibCheck --esModuleInterop lib/graph/refs.ts lib/graph/graph.ts lib/graph/document.ts lib/view/variance.ts lib/view/areas.ts lib/checks/run.ts scripts/check-refs.ts scripts/check-integrity.ts scripts/check-locate.ts scripts/check-recompute.ts scripts/check-suite.ts && for s in check-refs check-integrity check-locate check-recompute check-suite; do echo \"\\n=== $s ===\"; node .tscheck/scripts/$s.js; done",
     "seed": "node scripts/seed.mjs",
-    "test:fail-closed": "node scripts/with-server.mjs node scripts/fail-closed.mjs"
+    "test:fail-closed": "node scripts/with-server.mjs node scripts/fail-closed.mjs",
+    "stats": "node scripts/with-server.mjs node scripts/stats.mjs",
+    "check:claims": "node scripts/with-server.mjs node scripts/check-claims.mjs"
   },
   "dependencies": {
     "next": "15.5.28",
