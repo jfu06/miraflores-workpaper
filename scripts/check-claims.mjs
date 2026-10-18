@@ -90,11 +90,36 @@ const DOCS = [
 ];
 
 const { readFileSync, existsSync } = await import("node:fs");
+
+/**
+ * How many fail-closed tests there are. This is a figure the write-ups quote and
+ * the application cannot compute, so it is counted from the suite itself —
+ * adding a test and leaving the prose at the old number is exactly the drift
+ * this file exists to catch.
+ */
+const testCount = (readFileSync("scripts/fail-closed.mjs", "utf8").match(/^await check\(/gm) ?? []).length;
+const SPELLED = ["zero","one","two","three","four","five","six","seven","eight","nine","ten",
+  "eleven","twelve","thirteen","fourteen","fifteen","sixteen","seventeen","eighteen","nineteen","twenty",
+  "twenty-one","twenty-two","twenty-three","twenty-four","twenty-five"];
 const text = new Map(DOCS.filter(existsSync).map((f) => [f, readFileSync(f, "utf8")]));
 
 const problems = [];
 
 const digitsOf = (n) => new Set([String(n), group(n)]);
+
+FIGURES.push({
+  what: "fail-closed tests",
+  value: testCount,
+  patterns: [/([\d,]+) tests assert/g],
+});
+
+/** The same figure, spelled out, as the prose prefers. */
+for (const [file, body] of text) {
+  const m = body.match(/\b([a-z-]+) tests assert/i);
+  if (m && SPELLED.includes(m[1].toLowerCase()) && SPELLED.indexOf(m[1].toLowerCase()) !== testCount) {
+    problems.push(`${file}: says "${m[1]} tests assert", but the suite has ${testCount}`);
+  }
+}
 
 for (const { what, value, patterns } of FIGURES) {
   const ok = digitsOf(value);
