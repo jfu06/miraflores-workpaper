@@ -4,8 +4,8 @@ The lines to say out loud, with the clicks beside them. **Don't read it flat** �
 it's a safety net, not a teleprompter. If you lose your place, the bold heading
 tells you which screen you're on.
 
-**1,406 words of speech — about 14 minutes** with the clicking, which is what the
-rehearsal recording runs to. The timestamp on each heading is your clock.
+**1,406 words of speech — 14 minutes 45 seconds** with the clicking, which is what
+the rehearsal recording runs to. The timestamp on each heading is your clock.
 
 **Numbers:** full the first time ("twelve thousand four hundred"), rounded after
 ("that twelve-four"). Rounding is fine; precision you stumble over is not.
