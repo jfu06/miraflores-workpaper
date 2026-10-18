@@ -410,10 +410,11 @@
 
 ## 13:16 — How I used AI
 
-> Last thing. Claude wrote most of the code, against a design I set and decisions
-> I made.
+> Last thing. I used Claude as an implementation partner. I set the constraints
+> and made the judgment calls — including what this deliberately does not do —
+> then reviewed what came back and corrected it.
 
-**中** 最后一件事。大部分代码是 Claude 写的，但架构是我定的，决定是我做的。
+**中** 最后一件事。我把 Claude 当作实现上的搭档。**边界是我定的，判断是我做的——包括这个系统刻意不做什么**；产出回来之后，由我审查和纠正。
 
 > Three places it earned its keep. Solving the arithmetic of a hundred
 > twenty-eight lines against your published values. Writing the check suite. And

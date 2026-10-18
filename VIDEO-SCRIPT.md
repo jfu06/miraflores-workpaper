@@ -324,8 +324,9 @@ transmit a return — then try **Freeze and file california**.
 
 ## 13:16 — How I used AI · 91 words
 
-> Last thing. Claude wrote most of the code, against a design I set and decisions
-> I made.
+> Last thing. I used Claude as an implementation partner. I set the constraints
+> and made the judgment calls — including what this deliberately does not do —
+> then reviewed what came back and corrected it.
 >
 > Three places it earned its keep. Solving the arithmetic of a hundred
 > twenty-eight lines against your published values. Writing the check suite. And
