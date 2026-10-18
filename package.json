@@ -11,7 +11,8 @@
     "seed": "node scripts/seed.mjs",
     "test:fail-closed": "node scripts/with-server.mjs node scripts/fail-closed.mjs",
     "stats": "node scripts/with-server.mjs node scripts/stats.mjs",
-    "check:claims": "node scripts/with-server.mjs node scripts/check-claims.mjs"
+    "check:claims": "node scripts/with-server.mjs node scripts/check-claims.mjs",
+    "approach": "node scripts/approach-docx.mjs"
   },
   "dependencies": {
     "next": "15.5.28",
