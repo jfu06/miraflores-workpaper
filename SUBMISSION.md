@@ -9,9 +9,11 @@ not four features; they are one shape.
 
 **One reference grammar, one resolver.** The packet addresses everything by short
 strings in eleven formats. A single parser makes every click-through the same
-operation: all 8,691 references parse, all 2,749 reference sites in the current
-return resolve. When client answers had to become evidence, they got a reference
-in the same grammar and nothing else changed.
+operation: all 8,691 references parse, and all 2,749 reference sites in the
+current return resolve — six of them only through an explicit alias for a prior
+preparer's schedule, which the file reports as a finding rather than absorbing
+into the grammar. When client answers had to become evidence, they got a
+reference in the same grammar and nothing else changed.
 
 **Append-only, enforced by the database.** Triggers abort UPDATE and DELETE, so
 undo is a compensating event and the withdrawn entry stays on the record — one
@@ -26,8 +28,9 @@ has to be told a change happened; a change nobody anticipated still reopens it.
 engine, manual, recomputed, estimated. The recomputation is not assumed — for each
 line that is arithmetic over others, the combination reproducing the engine's own
 published value is solved for and verified: 128 lines, all exact, 19 of them
-subtracting. Five resist, and propagation **stops** there, because beyond them the
-figures are unknown rather than approximately known.
+subtracting. Five lines have inconsistent declared inputs — their own value
+cannot be produced from them — and propagation **stops** at a line like that,
+because beyond it the figures are unknown rather than approximately known.
 
 A rule lives where its state lives, so every path asks the same one, and
 nineteen tests assert the refusals. A blocking note stops a filing when the
