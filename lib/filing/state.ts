@@ -172,10 +172,12 @@ export interface OpenBlockingNote {
   scopeKind: string;
   scopeId: string;
   /**
-   * The return this note bears on, where it can be told. A note whose scope is
-   * not a line of one jurisdiction has none, and then it bears on every filing.
+   * The returns this note bears on, where they can be told: the jurisdiction of
+   * the line it was raised on, and every jurisdiction that line's value flows
+   * into. A note whose scope is not a line has none, and then it bears on every
+   * filing.
    */
-  jurisdiction?: string;
+  jurisdictions?: string[];
 }
 
 /**
@@ -188,7 +190,7 @@ export interface OpenBlockingNote {
 export function openBlockingNotes(
   events: WorkpaperEvent[],
   actorName: (id: string) => string,
-  jurisdictionOf: (lineKey: string) => string | undefined,
+  jurisdictionsOf: (lineKey: string) => string[] | undefined,
 ): OpenBlockingNote[] {
   const reverted = new Set<string>();
   for (const event of events) {
@@ -221,7 +223,8 @@ export function openBlockingNotes(
         raisedBy: actorName(event.actorId),
         scopeKind: event.scope.kind,
         scopeId: event.scope.id,
-        jurisdiction: event.scope.kind === "line" ? jurisdictionOf(event.scope.id) : undefined,
+        jurisdictions:
+          event.scope.kind === "line" ? jurisdictionsOf(event.scope.id) : undefined,
       };
     });
 }
@@ -231,11 +234,20 @@ export function openBlockingNotes(
  *
  * `ReviewNotePayload.blocking` has always been documented as stopping filing;
  * until this existed, nothing enforced it, and a return could be transmitted
- * with the firm's own blocking notes still open. The rule is deliberately
- * fail-closed: a note bears on the jurisdiction of the line it was raised on,
- * and a note whose jurisdiction cannot be determined — one raised on a document,
- * an extracted value, or the return as a whole — stops every filing, because
- * nothing in the record says it is unrelated to this one.
+ * with the firm's own blocking notes still open.
+ *
+ * A note stops a filing when the figure it was raised against reaches that
+ * return — not when it happens to share a jurisdiction with it. The two are not
+ * the same, and the difference is the whole of the judgment here: California is
+ * computed from federal amounts, so a federal figure in doubt leaves the
+ * California return in doubt, while a question about the California wage split
+ * says nothing about the federal return and should not hold it up. The file
+ * itself runs that way — its e-file record shows the state return held because
+ * the federal one was rejected, never the reverse.
+ *
+ * Fail-closed where the record cannot say: a note raised on a document, an
+ * extracted value, or the return as a whole stops every filing, because nothing
+ * establishes that it is unrelated to this one.
  */
 export function canFile(
   state: FilingState,
@@ -246,7 +258,9 @@ export function canFile(
     return { ok: false, reason: `The ${jurisdiction} return has already been filed.` };
   }
 
-  const bearing = notes.filter((n) => n.jurisdiction === undefined || n.jurisdiction === jurisdiction);
+  const bearing = notes.filter(
+    (n) => n.jurisdictions === undefined || n.jurisdictions.includes(jurisdiction),
+  );
   if (bearing.length === 0) return { ok: true };
 
   const first = bearing[0];

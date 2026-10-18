@@ -36,7 +36,7 @@ import type {
   QuestionPayload,
 } from "@/lib/events/types";
 import { resolveRef } from "@/lib/graph/graph";
-import { buildGraph } from "@/lib/graph/graph";
+import { buildGraph, jurisdictionsReached } from "@/lib/graph/graph";
 import { loadPacket } from "@/lib/packet/load";
 import { getClock } from "@/lib/time/server";
 
@@ -133,7 +133,7 @@ export async function POST(request: Request) {
       const blocking = openBlockingNotes(
         all,
         (id) => names.get(id) ?? id,
-        (lineKey) => graph.lineByKey.get(lineKey)?.jurisdiction,
+        (lineKey) => jurisdictionsReached(graph, lineKey),
       );
       const allowed = canFile(state, blocking, jurisdiction);
       if (!allowed.ok) return bad(allowed.reason!, 409);

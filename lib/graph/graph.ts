@@ -187,6 +187,39 @@ export function buildGraph(packet: Packet, clock: Clock = { live: true }): FactG
 }
 
 /** Where a resolved reference should navigate when clicked. */
+/**
+ * Which returns a line's value reaches.
+ *
+ * A California line is built from federal ones — Schedule CA (540NR) is a column
+ * of adjustments to federal amounts — so a federal figure in doubt puts the
+ * California return in doubt too, while the reverse does not hold. Walking
+ * `dependents` answers that from the file rather than from an assumption about
+ * which jurisdiction is downstream of which.
+ *
+ * Returns the line's own jurisdiction together with every jurisdiction it feeds.
+ */
+export function jurisdictionsReached(graph: FactGraph, lineKey: string): string[] {
+  const start = graph.lineByKey.get(lineKey);
+  if (!start) return [];
+
+  const reached = new Set<string>([start.jurisdiction]);
+  const seen = new Set<string>([lineKey]);
+  const stack = [lineKey];
+
+  while (stack.length > 0) {
+    const key = stack.pop()!;
+    for (const dependent of graph.dependents.get(key) ?? []) {
+      if (seen.has(dependent)) continue;
+      seen.add(dependent);
+      const line = graph.lineByKey.get(dependent);
+      if (line) reached.add(line.jurisdiction);
+      stack.push(dependent);
+    }
+  }
+
+  return [...reached].sort();
+}
+
 export type RefTarget =
   | { kind: "document"; documentId: string; page?: number; highlightEv?: string }
   | { kind: "line"; lineKey: string }

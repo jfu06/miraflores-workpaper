@@ -30,8 +30,10 @@ subtracting. Five resist, and propagation **stops** there, because beyond them t
 figures are unknown rather than approximately known.
 
 A rule lives where its state lives, so every path asks the same one, and
-seventeen tests assert the refusals: filing while a blocking note stands,
-adjusting a filed return, withdrawing an entry that is not yours.
+nineteen tests assert the refusals. A blocking note stops a filing when the
+figure it was raised against reaches that return: California is computed from
+federal amounts, so a federal figure in doubt holds the California return, while
+a question about the California wage split does not hold the federal one.
 
 What it refuses to do is as deliberate: no mapping of Form 540 onto Form 540NR
 after a mid-year move, and no totalling of findings that are not the same kind of

@@ -89,7 +89,8 @@ function equal(actual, expected, what) {
   if (actual !== expected) throw new Error(`${what}: expected ${expected}, got ${actual}`);
 }
 
-const FED = "F1040.2b"; // taxable interest, federal, numeric
+const FED = "F1040.2b"; // taxable interest: federal, and feeds the California return
+const FED_ONLY = "F1040.19"; // child tax credit: federal, and reaches no California line
 const CA = "SchCA540NR.1.E"; // California wages, a California line
 
 console.log(`fail-closed suite against ${url}\n`);
@@ -131,6 +132,33 @@ await check("a blocking note refuses a filing of its own jurisdiction", async ()
   allowed(await event("review_note", line(FED), { text: "test", blocking: true }), "note");
   await be("st-02");
   refused(await event("filing", { kind: "return", id: "federal" }, { jurisdiction: "federal" }), "filing");
+});
+
+await check("a blocking note on a federal line refuses the California filing it feeds", async () => {
+  // Schedule CA (540NR) is a column of adjustments to federal amounts, so a
+  // federal figure in doubt leaves the California return in doubt too.
+  await be("st-01");
+  allowed(await event("review_note", line(FED), { text: "test", blocking: true }), "note");
+  await be("st-02");
+  refused(
+    await event("filing", { kind: "return", id: "california" }, { jurisdiction: "california" }),
+    "california filing",
+  );
+});
+
+await check("a blocking note on a federal line that reaches no California line lets California through", async () => {
+  // The rule is about where the figure flows, not which jurisdiction it sits in.
+  await be("st-01");
+  allowed(await event("review_note", line(FED_ONLY), { text: "test", blocking: true }), "note");
+  await be("st-02");
+  refused(
+    await event("filing", { kind: "return", id: "federal" }, { jurisdiction: "federal" }),
+    "federal filing",
+  );
+  allowed(
+    await event("filing", { kind: "return", id: "california" }, { jurisdiction: "california" }),
+    "california filing",
+  );
 });
 
 await check("a blocking note on a California line does not refuse a federal filing", async () => {
