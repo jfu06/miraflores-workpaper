@@ -166,7 +166,7 @@ async function main() {
 
   if (!DO_FILE) {
     await report();
-    console.log("\nStopped before filing (--no-file), so the freeze can be done on camera.");
+    console.log("\nStopped before filing (--no-file); the freeze is left to perform.");
     return;
   }
 

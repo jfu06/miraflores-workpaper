@@ -2,8 +2,8 @@
  * The write-ups must agree with the code, and with each other.
  *
  * Every document here quotes counts. They were written at different times, and
- * one of them drifted: the video outline claimed 282 sales lots when the packet
- * holds 295, which nobody would notice by reading. This checks two things:
+ * one of them drifted: a write-up claimed 282 sales lots when the packet holds
+ * 295, which nobody would notice by reading. This checks two things:
  *
  *   - figures the application can compute are stated correctly, and
  *   - where several documents state the same figure, they state the same one.
@@ -83,9 +83,6 @@ const DOCS = [
   "CORE-IDEA.md",
   "FINDINGS.md",
   "SUBMISSION.md",
-  "VIDEO.md",
-  "VIDEO-SCRIPT.md",
-  "VIDEO-SCRIPT.zh.md",
   "DEPLOY.md",
 ];
 

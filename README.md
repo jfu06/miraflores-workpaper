@@ -34,7 +34,6 @@ the app at a different one without a code change.
 |---|---|
 | **[CORE-IDEA.md](CORE-IDEA.md)** | One page: the core idea and the data model |
 | **[FINDINGS.md](FINDINGS.md)** | The errors found, and how the design surfaced them |
-| **[VIDEO.md](VIDEO.md)** | Walkthrough outline |
 
 Ten errors are written up, all of them things the engine's own diagnostics do not
 report, and **both items the IRS is examining in the 2028 letter have findings**.

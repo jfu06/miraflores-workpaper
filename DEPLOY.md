@@ -65,7 +65,7 @@ one of those rules changes the seed fails loudly rather than writing a state the
 app would never produce. It did exactly that on its first run, which is how three
 missing tax-effect categories were found.
 
-Use `--no-file` when recording a walkthrough, so the freeze can happen on camera.
+Use `--no-file` to stop before filing, so the freeze is yours to perform.
 
 ### Starting over
 
